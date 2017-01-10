@@ -1,0 +1,5 @@
+# Heartbeat timeout in milliseconds.
+heartbeat_timeout: 250
+
+# Port for the REST API to listen on for AppendEntries and RequestVote calls.
+api_port: 8000
