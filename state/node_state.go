@@ -16,7 +16,7 @@ type LogEntry struct {
 const (
 	currentTerm string = "CurrentTerm"
 	votedFor string = "VotedFor"
-	log string = "Log"
+	logEntries string = "LogEntries"
 )
 
 // A NodeState contains both the persistent and volatile state that a node

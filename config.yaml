@@ -1,8 +1,8 @@
 # Election timeout average in milliseconds.
-election_timeout: 225
+election_timeout: 250
 
 # Election timeout jitter in milliseconds.
-election_timeout_jitter: 75
+election_timeout_jitter: 100
 
 # Port for the REST API to listen on for AppendEntries and RequestVote calls.
 api_port: 8000
