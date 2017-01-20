@@ -35,5 +35,6 @@ $ go run main.go
 
 Curl can be used to append new entries to the node logs:
 ```sh
-curl -s -w "%{http_code}\n" localhost:8000/append_entries -d '{"term": 1, "entries": [{"key":"a","value":"1"}], "prevLogTerm": 0, "prevLogIndex": -1}'
+curl -s -w "%{http_code}\n" localhost:8000/append_entries \
+-d '{"term": 1, "entries": [{"key":"a","value":"1"}], "prevLogTerm": 0, "prevLogIndex": -1}'
 ```
