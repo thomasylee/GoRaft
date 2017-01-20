@@ -1,7 +1,7 @@
 package state
 
 import (
-	"bytes"
+	// "bytes"
 	"encoding/json"
 	"log"
 	"strconv"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/boltdb/bolt"
 
-	"github.com/thomasylee/GoRaft/errors"
+	// "github.com/thomasylee/GoRaft/errors"
 )
 
 // Key-value pairs are stored in the State bucket for all Bolt databases.
@@ -83,31 +83,27 @@ func (boltSM BoltStateMachine) Get(key string) (string, error) {
 }
 
 /**
+ * Returns log entries within the specified key range.
  *
+ * TODO: Use a more efficient method than querying each index one at a time.
  */
-func (boltSM BoltStateMachine) RetrieveLogEntries(lastIndex int) (entries []LogEntry, err error) {
-	err = boltSM.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte(bucket)).Cursor()
-
-		min := []byte("0")
-		max := []byte(strconv.Itoa(lastIndex))
-
-		var entries []LogEntry
-		var err error
-		for k, v := bucket.Seek(min); k != nil && bytes.Compare(k, max) <= 0; k, v = bucket.Next() {
-			var entry LogEntry
-			err = json.Unmarshal(v, &entry)
-			if errors.HandleError("Failed to unmarshall JSON LogEntry:", err, false) {
-				return err
-			}
-
-			intKey, err := strconv.Atoi(string(k))
-			if errors.HandleError("Failed to convert LogEntry key to int:", err, false) {
-				return err
-			}
-			entries[intKey] = entry
+func (boltSM BoltStateMachine) RetrieveLogEntries(firstIndex int, lastIndex int) ([]LogEntry, error) {
+	entries := []LogEntry{}
+	for i := firstIndex; i <= lastIndex; i++ {
+		jsonValue, err := boltSM.Get(strconv.Itoa(i))
+		if err != nil {
+			return nil, err
+		} else if jsonValue == "" {
+			// As soon as we reach an empty record, we know there are no more entries.
+			return entries, nil
 		}
-		return nil
-	})
-	return
+
+		var entry LogEntry
+		err = json.Unmarshal([]byte(jsonValue), &entry)
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, entry)
+	}
+	return entries, nil
 }
