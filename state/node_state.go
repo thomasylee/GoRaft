@@ -2,21 +2,29 @@ package state
 
 import (
 	"encoding/json"
-	"log"
 	"strconv"
 
-	"github.com/thomasylee/GoRaft/errors"
+	"github.com/op/go-logging"
 )
 
-// A LogEntry represents a state machine command (Put {Key},{Value}) and the
-// term when the entry was received by the leader.
+/**
+ * The leveled Logger to use in the state package.
+ */
+var Log *logging.Logger
+
+/**
+ * A LogEntry represents a state machine command (Put {Key},{Value}) and the
+ * term when the entry was received by the leader.
+ */
 type LogEntry struct {
 	Key string
 	Value string
 	Term int
 }
 
-// Define constants for important keys in the Bolt database.
+/**
+ * Define constants for important keys in the Bolt database.
+ */
 const (
 	currentTerm string = "CurrentTerm"
 	votedFor string = "VotedFor"
@@ -67,32 +75,46 @@ var initializedNodeState bool = false
  * Return a NodeState based on values in the node state Bolt database, using
  * default values if the database does not exist or have any values in it.
  */
-func GetNodeState() NodeState {
+func GetNodeState(logger *logging.Logger) NodeState {
 	if initializedNodeState {
 		return nodeState
 	}
 	initializedNodeState = true
 
+	Log = logger
+
 	nodeStateMachine, err := NewBoltStateMachine("node_state.db")
-	errors.HandleError("Failed to initialize nodeStateMachine:", err, true)
+	if err != nil {
+		Log.Panic("Failed to initialize nodeStateMachine:", err.Error())
+	}
 	storageStateMachine, err := NewBoltStateMachine("state.db")
-	errors.HandleError("Failed to initialize storageStateMachine:", err, true)
+	if err != nil {
+		Log.Panic("Failed to initialize storageStateMachine:", err.Error())
+	}
 
 	var currentTermValue int
 	retrievedCurrentTerm, err := nodeStateMachine.Get(currentTerm)
-	errors.HandleError("Failed to retrieve CurrentTerm:", err, true)
+	if err != nil {
+		Log.Panic("Failed to retrieve CurrentTerm:", err.Error())
+	}
 	if retrievedCurrentTerm == "" {
 		currentTermValue = 0
 	} else {
 		currentTermValue, err = strconv.Atoi(retrievedCurrentTerm)
-		errors.HandleError("Failed to convert CurrentTerm to int:", err, true)
+		if err != nil {
+			Log.Panic("Failed to convert CurrentTerm to int:", err.Error())
+		}
 	}
 
 	votedForValue, err := nodeStateMachine.Get(votedFor)
-	errors.HandleError("Failed to retrieve VotedFor:", err, true)
+	if err != nil {
+		Log.Panic("Failed to retrieve VotedFor:", err.Error())
+	}
 
 	logEntries, err := nodeStateMachine.RetrieveLogEntries(0, 1000000)
-	errors.HandleError("Failed to retrieve log entries:", err, true)
+	if err != nil {
+		Log.Panic("Failed to retrieve log entries:", err.Error())
+	}
 
 	nodeState = NodeState{NodeStateMachine: nodeStateMachine, StorageStateMachine: storageStateMachine}
 	nodeState.SetCurrentTerm(currentTermValue)
@@ -107,8 +129,7 @@ func GetNodeState() NodeState {
  */
 func (state *NodeState) SetCurrentTerm(newCurrentTerm int) {
 	state.currentTerm = newCurrentTerm
-	log.Println(currentTerm, strconv.Itoa(newCurrentTerm))
-	log.Println(state.NodeStateMachine)
+	Log.Debugf("CurrentTerm updated: %d", newCurrentTerm)
 	state.NodeStateMachine.Put(currentTerm, strconv.Itoa(newCurrentTerm))
 }
 

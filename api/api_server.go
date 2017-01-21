@@ -3,15 +3,20 @@ package api
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/op/go-logging"
 
 	"github.com/thomasylee/GoRaft/state"
 )
+
+/**
+ * The leveled Logger to use in the api package.
+ */
+var Log *logging.Logger
 
 /**
  * An Entry holds a log entry in an AppendEntriesRequest. It is different from
@@ -65,7 +70,7 @@ func handleAppendEntries(writer http.ResponseWriter, request *http.Request, time
 		return
 	}
 
-	nodeState := state.GetNodeState()
+	nodeState := state.GetNodeState(Log)
 
 	currentTerm := nodeState.CurrentTerm()
 	success := false
@@ -102,7 +107,7 @@ func handleAppendEntries(writer http.ResponseWriter, request *http.Request, time
 			logEntry := state.LogEntry{Key: entry.Key, Value: entry.Value, Term: currentTerm}
 			err = nodeState.AppendEntryToLog(i, logEntry)
 			if err != nil {
-				log.Println(err.Error())
+				Log.Error(err.Error())
 				success = false
 			}
 		}
@@ -115,7 +120,7 @@ func handleAppendEntries(writer http.ResponseWriter, request *http.Request, time
 		key := strconv.Itoa(prevLogIndex)
 		value, err := nodeState.NodeStateMachine.Get(key)
 		if err != nil {
-			log.Println(err.Error())
+			Log.Error(err.Error())
 			break
 		}
 		if value == "" {
@@ -138,7 +143,8 @@ func writeAppendEntriesResponse(writer http.ResponseWriter, currentTerm int, suc
 /**
  * Runs the API server on the port specified in config.yaml.
  */
-func RunServer(timeoutChannel chan<- bool, port int) {
+func RunServer(logger *logging.Logger, timeoutChannel chan<- bool, port int) {
+	Log = logger
 	router := mux.NewRouter()
 
 	router.HandleFunc("/append_entries", func(writer http.ResponseWriter, request *http.Request) {
@@ -152,5 +158,5 @@ func RunServer(timeoutChannel chan<- bool, port int) {
 		ReadTimeout: 10 * time.Second,
 	}
 
-	log.Fatal(server.ListenAndServe())
+	Log.Notice(server.ListenAndServe())
 }

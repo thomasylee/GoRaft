@@ -1,3 +1,7 @@
+# Maximum log level that will get logged.
+# See github.com/op/go-logging for available log levels.
+log_level: "debug"
+
 # Election timeout average in milliseconds.
 election_timeout: 250
 

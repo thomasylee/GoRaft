@@ -15,6 +15,7 @@ GoRaft depends on the following external packages:
 * [github.com/boltdb/bolt](https://github.com/boltdb/bolt) - To act as the persistent finite state machine (FSM)
 * [github.com/go-yaml/yaml](https://github.com/go-yaml/yaml) - To parse the YAML config file
 * [github.com/gorilla/mux](https://github.com/gorilla/mux) - For simple REST API construction, though I may switch from mux to gRPC later to stay true to the Raft article
+* [github.com/op/go-logging](https://github.com/op/go-logging) - For leveled logging
 
 ## Getting Started
 
