@@ -78,6 +78,7 @@ func handleAppendEntries(writer http.ResponseWriter, request *http.Request, time
 	// Don't append entries for a stale leader.
 	if appendEntriesRequest.Term < currentTerm {
 		writeAppendEntriesResponse(writer, currentTerm, success)
+		Log.Debug("success = false due to term being too old:", currentTerm)
 		return
 	} else if appendEntriesRequest.Term > currentTerm {
 		// Update currentTerm if the supplied term is newer.
@@ -85,12 +86,21 @@ func handleAppendEntries(writer http.ResponseWriter, request *http.Request, time
 		currentTerm = appendEntriesRequest.Term
 	}
 
+	Log.Debug("LogLength =", nodeState.LogLength())
+	if nodeState.LogLength() != 0 && appendEntriesRequest.PrevLogIndex == -1 {
+		writeAppendEntriesResponse(writer, currentTerm, success)
+		Log.Debug("success = false due to PrevLogIndex = -1:", appendEntriesRequest.PrevLogIndex)
+		return
+	}
+
 	// Make sure prevLogTerm matches the term of the entry at prevLogIndex, unless
 	// this is the first entry to be applied.
+	Log.Debug("PrevLogIndex =", appendEntriesRequest.PrevLogIndex)
 	if (appendEntriesRequest.PrevLogIndex != -1 || nodeState.LogLength() != 0) && (
 		nodeState.LogLength() <= appendEntriesRequest.PrevLogIndex ||
 		appendEntriesRequest.PrevLogTerm != nodeState.Log(appendEntriesRequest.PrevLogIndex).Term) {
 		writeAppendEntriesResponse(writer, currentTerm, success)
+		Log.Debug("success = false due to PrevLogIndex mismatch:", appendEntriesRequest.PrevLogIndex)
 		return
 	}
 
@@ -114,6 +124,11 @@ func handleAppendEntries(writer http.ResponseWriter, request *http.Request, time
 		requestEntriesIndex += 1
 	}
 
+	if !success {
+		writeAppendEntriesResponse(writer, currentTerm, success)
+		return
+	}
+
 	// Remove all log entries that existed in this node's state past the last
 	// index given by the request.
 	for i := prevLogIndex + len(appendEntriesRequest.Entries) + 1; ; i++ {
@@ -129,6 +144,7 @@ func handleAppendEntries(writer http.ResponseWriter, request *http.Request, time
 		nodeState.NodeStateMachine.Put(key, value)
 	}
 
+	Log.Debug("success = true")
 	writeAppendEntriesResponse(writer, currentTerm, success)
 }
 

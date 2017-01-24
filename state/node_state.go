@@ -48,7 +48,7 @@ type NodeState struct {
 
 	// Log entries, each containing a command for the state machine and the term
 	// when the entry was received from the leader.
-	log []LogEntry
+	log *[]LogEntry
 
 	// Node state and stored state are stored by different state machines.
 	NodeStateMachine StateMachine
@@ -119,7 +119,7 @@ func GetNodeState(logger *logging.Logger) NodeState {
 	nodeState = NodeState{NodeStateMachine: nodeStateMachine, StorageStateMachine: storageStateMachine}
 	nodeState.SetCurrentTerm(currentTermValue)
 	nodeState.SetVotedFor(votedForValue)
-	nodeState.log = logEntries
+	nodeState.log = &logEntries
 
 	return nodeState
 }
@@ -168,7 +168,7 @@ func (state NodeState) AppendEntryToLog(index int, entry LogEntry) error {
 
 	err = state.NodeStateMachine.Put(strconv.Itoa(index), string(jsonValue))
 	if err == nil {
-		state.log = append(state.log, entry)
+		*state.log = append(*state.log, entry)
 		return nil
 	} else {
 		return err
@@ -179,12 +179,12 @@ func (state NodeState) AppendEntryToLog(index int, entry LogEntry) error {
  * Returns the number of entries in the node's log.
  */
 func (state NodeState) LogLength() int {
-	return len(state.log)
+	return len(*state.log)
 }
 
 /**
  * Returns the LogEntry at the specified index.
  */
 func (state NodeState) Log(index int) LogEntry {
-	return state.log[index]
+	return (*state.log)[index]
 }
