@@ -8,15 +8,10 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/op/go-logging"
 
+	"github.com/thomasylee/GoRaft/global"
 	"github.com/thomasylee/GoRaft/state"
 )
-
-/**
- * The leveled Logger to use in the api package.
- */
-var Log *logging.Logger
 
 /**
  * An Entry holds a log entry in an AppendEntriesRequest. It is different from
@@ -38,7 +33,7 @@ type AppendEntriesRequest struct {
 	PrevLogIndex int
 	PrevLogTerm int
 	Entries []Entry
-	CommitIndex int
+	LeaderCommit int
 }
 
 /**
@@ -52,9 +47,9 @@ type AppendEntriesResponse struct {
 /**
  * Handles append_entries calls, including heartbeats.
  */
-func handleAppendEntries(writer http.ResponseWriter, request *http.Request, timeoutChannel chan<- bool) {
+func handleAppendEntries(writer http.ResponseWriter, request *http.Request) {
 	// Indicate that a message has been received so we don't time out.
-	timeoutChannel <- true
+	global.TimeoutChannel <- true
 
 	// If the request is empty, it's just a heartbeat.
 	body, _ := ioutil.ReadAll(request.Body)
@@ -70,54 +65,61 @@ func handleAppendEntries(writer http.ResponseWriter, request *http.Request, time
 		return
 	}
 
-	nodeState := state.GetNodeState(Log)
+	currentTerm, success := processAppendEntries(appendEntriesRequest, state.GetNodeState())
 
+	appendEntriesResponse := AppendEntriesResponse{Term: currentTerm, Success: success}
+	json.NewEncoder(writer).Encode(appendEntriesResponse)
+}
+
+/**
+ * Processes the body of a non-heartbeat append_entries call.
+ * The return values are the currentTerm and the success boolean.
+ */
+func processAppendEntries(request AppendEntriesRequest, nodeState state.NodeState) (int, bool) {
 	currentTerm := nodeState.CurrentTerm()
 	success := false
 
 	// Don't append entries for a stale leader.
-	if appendEntriesRequest.Term < currentTerm {
-		writeAppendEntriesResponse(writer, currentTerm, success)
-		Log.Debug("success = false due to term being too old:", currentTerm)
-		return
-	} else if appendEntriesRequest.Term > currentTerm {
+	if request.Term < currentTerm {
+		global.Log.Debug("success = false due to term being too old:", currentTerm)
+		return currentTerm, success
+	} else if request.Term > currentTerm {
 		// Update currentTerm if the supplied term is newer.
-		nodeState.SetCurrentTerm(appendEntriesRequest.Term)
-		currentTerm = appendEntriesRequest.Term
+		nodeState.SetCurrentTerm(request.Term)
+		currentTerm = request.Term
 	}
 
-	Log.Debug("LogLength =", nodeState.LogLength())
-	if nodeState.LogLength() != 0 && appendEntriesRequest.PrevLogIndex == -1 {
-		writeAppendEntriesResponse(writer, currentTerm, success)
-		Log.Debug("success = false due to PrevLogIndex = -1:", appendEntriesRequest.PrevLogIndex)
-		return
+	global.Log.Debug("LogLength =", nodeState.LogLength())
+	if nodeState.LogLength() != 0 && request.PrevLogIndex == -1 {
+		global.Log.Debug("success = false due to PrevLogIndex = -1:", request.PrevLogIndex)
+		return currentTerm, success
 	}
 
 	// Make sure prevLogTerm matches the term of the entry at prevLogIndex, unless
 	// this is the first entry to be applied.
-	Log.Debug("PrevLogIndex =", appendEntriesRequest.PrevLogIndex)
-	if (appendEntriesRequest.PrevLogIndex != -1 || nodeState.LogLength() != 0) && (
-		nodeState.LogLength() <= appendEntriesRequest.PrevLogIndex ||
-		appendEntriesRequest.PrevLogTerm != nodeState.Log(appendEntriesRequest.PrevLogIndex).Term) {
-		writeAppendEntriesResponse(writer, currentTerm, success)
-		Log.Debug("success = false due to PrevLogIndex mismatch:", appendEntriesRequest.PrevLogIndex)
-		return
+	global.Log.Debug("PrevLogIndex =", request.PrevLogIndex)
+	if (request.PrevLogIndex != -1 || nodeState.LogLength() != 0) && (
+		nodeState.LogLength() <= request.PrevLogIndex ||
+		request.PrevLogTerm != nodeState.Log(request.PrevLogIndex).Term) {
+
+		global.Log.Debug("success = false due to PrevLogIndex mismatch:", request.PrevLogIndex)
+		return currentTerm, success
 	}
 
 	requestEntriesIndex := 0
 	success = true
-	prevLogIndex := appendEntriesRequest.PrevLogIndex
+	prevLogIndex := request.PrevLogIndex
 
 	// Save all the log entries that were received, but trust that ones with the
 	// same term don't need to be updated.
-	for i := prevLogIndex + 1; i <= prevLogIndex + len(appendEntriesRequest.Entries); i++ {
+	for i := prevLogIndex + 1; i <= prevLogIndex + len(request.Entries); i++ {
 		if nodeState.LogLength() <= i || nodeState.Log(i).Term != currentTerm {
-			entry := appendEntriesRequest.Entries[i]
+			entry := request.Entries[i]
 
 			logEntry := state.LogEntry{Key: entry.Key, Value: entry.Value, Term: currentTerm}
-			err = nodeState.AppendEntryToLog(i, logEntry)
+			err := nodeState.AppendEntryToLog(i, logEntry)
 			if err != nil {
-				Log.Error(err.Error())
+				global.Log.Error(err.Error())
 				success = false
 			}
 		}
@@ -125,47 +127,40 @@ func handleAppendEntries(writer http.ResponseWriter, request *http.Request, time
 	}
 
 	if !success {
-		writeAppendEntriesResponse(writer, currentTerm, success)
-		return
+		return currentTerm, success
 	}
 
 	// Remove all log entries that existed in this node's state past the last
 	// index given by the request.
-	for i := prevLogIndex + len(appendEntriesRequest.Entries) + 1; ; i++ {
+	for i := prevLogIndex + len(request.Entries) + 1; ; i++ {
 		key := strconv.Itoa(prevLogIndex)
-		value, err := nodeState.NodeStateMachine.Get(key)
+		value, err := nodeState.NodeStateMachine().Get(key)
 		if err != nil {
-			Log.Error(err.Error())
+			global.Log.Error(err.Error())
 			break
 		}
 		if value == "" {
 			break
 		}
-		nodeState.NodeStateMachine.Put(key, value)
+		nodeState.NodeStateMachine().Put(key, value)
 	}
 
-	Log.Debug("success = true")
-	writeAppendEntriesResponse(writer, currentTerm, success)
-}
-
-/**
- * Converts the currentTerm and success to JSON and returns them with a 200 status code.
- */
-func writeAppendEntriesResponse(writer http.ResponseWriter, currentTerm int, success bool) {
-	appendEntriesResponse := AppendEntriesResponse{Term: currentTerm, Success: success}
-	json.NewEncoder(writer).Encode(appendEntriesResponse)
+	global.Log.Debug("success = true")
+	return currentTerm, success
 }
 
 /**
  * Runs the API server on the port specified in config.yaml.
  */
-func RunServer(logger *logging.Logger, timeoutChannel chan<- bool, port int) {
-	Log = logger
+func RunServer(port int) {
 	router := mux.NewRouter()
 
+	router.HandleFunc("/append_entries", handleAppendEntries)
+/*
 	router.HandleFunc("/append_entries", func(writer http.ResponseWriter, request *http.Request) {
 		handleAppendEntries(writer, request, timeoutChannel)
 	})
+*/
 
 	server := &http.Server{
 		Handler: router,
@@ -174,5 +169,5 @@ func RunServer(logger *logging.Logger, timeoutChannel chan<- bool, port int) {
 		ReadTimeout: 10 * time.Second,
 	}
 
-	Log.Notice(server.ListenAndServe())
+	global.Log.Warning(server.ListenAndServe())
 }

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+
+	"github.com/thomasylee/GoRaft/global"
 )
 
 // Key-value pairs are stored in the State bucket for all Bolt databases.
@@ -39,7 +41,7 @@ func (boltSM *BoltStateMachine) CreateBucketIfNotExists(name string) error {
 	return boltSM.db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
-			Log.Error("Create bucket error:", err)
+			global.Log.Error("Create bucket error:", err)
 			return err
 		}
 		return nil
