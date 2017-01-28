@@ -22,8 +22,8 @@ func SetUpLogger() {
 /**
  * Sets the log level based on the config.yaml log_level value.
  */
-func SetLogLevel(config map[interface{}]interface{}) {
-	logLevel, err := logging.LogLevel(config["log_level"].(string))
+func SetLogLevel(level string) {
+	logLevel, err := logging.LogLevel(level)
 	if err != nil {
 		Log.Panic(err)
 	}

@@ -190,12 +190,12 @@ func (state *NodeStateImpl) AppendEntryToLog(index int, entry LogEntry) error {
 	}
 
 	err = state.nodeStateMachine.Put(strconv.Itoa(index), string(jsonValue))
-	if err == nil {
-		*state.log = append(*state.log, entry)
-		return nil
-	} else {
+	if err != nil {
 		return err
 	}
+
+	*state.log = append(*state.log, entry)
+	return nil
 }
 
 /**

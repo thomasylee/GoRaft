@@ -19,7 +19,7 @@ func main() {
 	global.LoadConfig()
 
 	global.Log.Info("Loaded config:", global.Config)
-	global.SetLogLevel(global.Config)
+	global.SetLogLevel(global.Config["log_level"].(string))
 
 	// Check if state was loaded correctly from previous run.
 	global.Log.Debug(state.GetNodeState())
