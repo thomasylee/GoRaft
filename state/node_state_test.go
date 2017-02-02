@@ -3,12 +3,20 @@ package state
 import (
 	"strconv"
 	"testing"
+
+	"github.com/thomasylee/GoRaft/global"
 )
 
+func createNodeState() *NodeState {
+	return NewNodeState(NewMemoryStateMachine(), NewMemoryStateMachine())
+}
+
 func Test_AppendEntryToLog_WithValidNodeAndParams_AppendsEntryToMemAndStateMachine(t *testing.T) {
-	var node NodeState
-	node = &NodeStateImpl{nodeStateMachine: newStateMachineTestImpl()}
-	node.(*NodeStateImpl).log = &[]LogEntry{}
+	global.SetUpLogger()
+	global.SetLogLevel("critical")
+
+	node := createNodeState()
+	node.log = &[]LogEntry{}
 
 	var tests = []struct {
 		index int
@@ -30,7 +38,7 @@ func Test_AppendEntryToLog_WithValidNodeAndParams_AppendsEntryToMemAndStateMachi
 			t.Error("Log entry in memory doesn't match:", test.index, entryInMem)
 		}
 
-		jsonInSM, err := node.NodeStateMachine().Get(strconv.Itoa(test.index))
+		jsonInSM, err := node.NodeStateMachine.Get(strconv.Itoa(test.index))
 		if err != nil {
 			t.Errorf("Error processing entry %d: %s", test.index, err.Error())
 		} else if jsonInSM != test.jsonRep {

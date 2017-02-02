@@ -11,20 +11,16 @@ import (
 	"github.com/thomasylee/GoRaft/state"
 )
 
-/**
- * An Entry holds a log entry in an AppendEntriesRequest. It is different from
- * the LogEntry type in github.com/thomasylee/GoRaft/state since it does not
- * contain a Term.
- */
+// An Entry holds a log entry in an AppendEntriesRequest. It is different from
+// the LogEntry type in github.com/thomasylee/GoRaft/state since it does not
+// contain a Term.
 type Entry struct {
 	Key string
 	Value string
 }
 
-/**
- * An AppendEntriesRequest contains all the parameters that should be present in
- * append_entries calls that aren't heartbeats.
- */
+// An AppendEntriesRequest contains all the parameters that should be present in
+// append_entries calls that aren't heartbeats.
 type AppendEntriesRequest struct {
 	Term int
 	LeaderId string
@@ -34,17 +30,13 @@ type AppendEntriesRequest struct {
 	LeaderCommit int
 }
 
-/**
- * An AppendEntriesResponse contains the expected return values from an append_entries call.
- */
+// An AppendEntriesResponse contains the expected return values from an append_entries call.
 type AppendEntriesResponse struct {
 	Term int
 	Success bool
 }
 
-/**
- * Handles append_entries calls, including heartbeats.
- */
+// Handles append_entries calls, including heartbeats.
 func handleAppendEntries(writer http.ResponseWriter, request *http.Request) {
 	// Indicate that a message has been received so we don't time out.
 	global.TimeoutChannel <- true
@@ -63,17 +55,16 @@ func handleAppendEntries(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	currentTerm, success := processAppendEntries(appendEntriesRequest, state.GetNodeState())
+	currentTerm, success := processAppendEntries(appendEntriesRequest)
 
 	appendEntriesResponse := AppendEntriesResponse{Term: currentTerm, Success: success}
 	json.NewEncoder(writer).Encode(appendEntriesResponse)
 }
 
-/**
- * Processes the body of a non-heartbeat append_entries call.
- * The return values are the currentTerm and the success boolean.
- */
-func processAppendEntries(request AppendEntriesRequest, nodeState state.NodeState) (int, bool) {
+// Processes the body of a non-heartbeat append_entries call.
+// The return values are the currentTerm and the success boolean.
+func processAppendEntries(request AppendEntriesRequest) (int, bool) {
+	nodeState := state.GetNodeState()
 	currentTerm := nodeState.CurrentTerm()
 	success := false
 
@@ -132,7 +123,7 @@ func processAppendEntries(request AppendEntriesRequest, nodeState state.NodeStat
 	// index given by the request.
 	for i := prevLogIndex + len(request.Entries) + 1; ; i++ {
 		key := strconv.Itoa(prevLogIndex)
-		value, err := nodeState.NodeStateMachine().Get(key)
+		value, err := nodeState.NodeStateMachine.Get(key)
 		if err != nil {
 			global.Log.Error(err.Error())
 			break
@@ -140,16 +131,14 @@ func processAppendEntries(request AppendEntriesRequest, nodeState state.NodeStat
 		if value == "" {
 			break
 		}
-		nodeState.NodeStateMachine().Put(key, value)
+		nodeState.NodeStateMachine.Put(key, value)
 	}
 
 	global.Log.Debug("success = true")
 	return currentTerm, success
 }
 
-/**
- * Runs the API server on the port specified in config.yaml.
- */
+// Runs the API server on the port specified in config.yaml.
 func RunServer(port int) {
 	http.HandleFunc("/append_entries", handleAppendEntries)
 

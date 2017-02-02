@@ -13,6 +13,8 @@ import (
 )
 
 func Test_handleAppendEntries_WhenRequestIsEmpty_ReturnsEmpty200(t *testing.T) {
+	resetTestEnvironment()
+
 	// An empty append_entries request is just a heartbeat.
 	request, err := http.NewRequest("POST", "http://localhost:8000/append_entries", strings.NewReader(""))
 	if err != nil {
@@ -43,6 +45,8 @@ func Test_handleAppendEntries_WhenRequestIsEmpty_ReturnsEmpty200(t *testing.T) {
 }
 
 func Test_handleAppendEntries_WhenRequestIsNotEmpty_ReturnsValidJson(t *testing.T) {
+	resetTestEnvironment()
+
 	jsonRequest := "{\"term\": 1, \"leaderId\": \"abc\", \"prevLogIndex\": -1, \"PrevLogTerm\": -1, \"entries\": [{\"key\": \"a\", \"value\": \"1\"}], \"leaderCommit\": 0}"
 
 	request, err := http.NewRequest("POST", "http://localhost:8000/append_entries", strings.NewReader(jsonRequest))
@@ -83,12 +87,13 @@ func Test_handleAppendEntries_WhenRequestIsNotEmpty_ReturnsValidJson(t *testing.
 }
 
 func Test_processAppendEntries_WhenRequestTermIsTooOld_ReturnsUnsuccessful(t *testing.T) {
+	resetTestEnvironment()
+
 	entry := Entry{Key: "a", Value: "1"}
 	entries := []Entry{entry}
 	request := AppendEntriesRequest{Term: -1, LeaderId: "b394b092-f840-406f-9284-ec3a6e0a2aa9", PrevLogIndex: -1, PrevLogTerm: -1, Entries: entries, LeaderCommit: -1}
 
-	nodeState := state.NewNodeStateTestImpl()
-	_, success := processAppendEntries(request, nodeState)
+	_, success := processAppendEntries(request)
 
 	if success {
 		t.Error("AppendEntriesResponse had success value true.")
@@ -96,12 +101,13 @@ func Test_processAppendEntries_WhenRequestTermIsTooOld_ReturnsUnsuccessful(t *te
 }
 
 func Test_processAppendEntries_WhenRequestTermIsMoreRecent_UpdatesCurrentTerm(t *testing.T) {
+	resetTestEnvironment()
+
 	entry := Entry{Key: "a", Value: "1"}
 	entries := []Entry{entry}
 	request := AppendEntriesRequest{Term: 1, LeaderId: "b394b092-f840-406f-9284-ec3a6e0a2aa9", PrevLogIndex: -1, PrevLogTerm: -1, Entries: entries, LeaderCommit: -1}
 
-	nodeState := state.NewNodeStateTestImpl()
-	currentTerm, success := processAppendEntries(request, nodeState)
+	currentTerm, success := processAppendEntries(request)
 
 	if !success {
 		t.Error("AppendEntriesResponse had success value false.")
@@ -110,7 +116,7 @@ func Test_processAppendEntries_WhenRequestTermIsMoreRecent_UpdatesCurrentTerm(t 
 		t.Error("Returned CurrentTerm did not have value 1:", currentTerm)
 	}
 
-	retrievedTerm := nodeState.CurrentTerm()
+	retrievedTerm := state.GetNodeState().CurrentTerm()
 	if retrievedTerm != 1 {
 		t.Error("CurrentTerm saved to node state did not have value 1:", retrievedTerm)
 	}

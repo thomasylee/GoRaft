@@ -5,24 +5,24 @@ import (
 	"strconv"
 )
 
-type StateMachineTestImpl struct {
+type MemoryStateMachine struct {
 	values map[string]string
 }
 
-func newStateMachineTestImpl() StateMachineTestImpl {
-	return StateMachineTestImpl{values: make(map[string]string)}
+func NewMemoryStateMachine() MemoryStateMachine {
+	return MemoryStateMachine{values: make(map[string]string)}
 }
 
-func (sm StateMachineTestImpl) Put(key string, value string) error {
+func (sm MemoryStateMachine) Put(key string, value string) error {
 	sm.values[key] = value
 	return nil
 }
 
-func (sm StateMachineTestImpl) Get(key string) (string, error) {
+func (sm MemoryStateMachine) Get(key string) (string, error) {
 	return sm.values[key], nil
 }
 
-func (sm StateMachineTestImpl) RetrieveLogEntries(firstIndex int, lastIndex int) ([]LogEntry, error) {
+func (sm MemoryStateMachine) RetrieveLogEntries(firstIndex int, lastIndex int) ([]LogEntry, error) {
 	entries := []LogEntry{}
 	for i := firstIndex; i <= lastIndex; i++ {
 		jsonValue, err := sm.Get(strconv.Itoa(i))
