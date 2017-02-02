@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/mux"
-
 	"github.com/thomasylee/GoRaft/global"
 	"github.com/thomasylee/GoRaft/state"
 )
@@ -153,17 +151,9 @@ func processAppendEntries(request AppendEntriesRequest, nodeState state.NodeStat
  * Runs the API server on the port specified in config.yaml.
  */
 func RunServer(port int) {
-	router := mux.NewRouter()
-
-	router.HandleFunc("/append_entries", handleAppendEntries)
-/*
-	router.HandleFunc("/append_entries", func(writer http.ResponseWriter, request *http.Request) {
-		handleAppendEntries(writer, request, timeoutChannel)
-	})
-*/
+	http.HandleFunc("/append_entries", handleAppendEntries)
 
 	server := &http.Server{
-		Handler: router,
 		Addr: "127.0.0.1:" + strconv.Itoa(port),
 		WriteTimeout: 10 * time.Second,
 		ReadTimeout: 10 * time.Second,
