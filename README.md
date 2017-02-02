@@ -14,7 +14,6 @@ The goal of this project is for me to learn Go and become better acquainted with
 GoRaft depends on the following external packages:
 * [github.com/boltdb/bolt](https://github.com/boltdb/bolt) - To store persistent state
 * [github.com/go-yaml/yaml](https://github.com/go-yaml/yaml) - To parse the YAML config file
-* [github.com/gorilla/mux](https://github.com/gorilla/mux) - For simple REST API construction, though I may switch from mux to gRPC later to stay true to the Raft article
 * [github.com/op/go-logging](https://github.com/op/go-logging) - For leveled logging
 
 ## Getting Started
