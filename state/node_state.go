@@ -101,14 +101,17 @@ func NewNodeState(nodeStateMachine StateMachine, storageStateMachine StateMachin
 		global.Log.Panic("Failed to retrieve VotedFor:", err.Error())
 	}
 
-	logEntries, err := nodeStateMachine.RetrieveLogEntries(0, 1000000)
+	logEntries, err := nodeStateMachine.RetrieveLogEntries(1, 1000000)
 	if err != nil {
 		global.Log.Panic("Failed to retrieve log entries:", err.Error())
 	}
 	global.Log.Debug("Pre-existing log entries:", len(logEntries))
 
 	var node *NodeState
-	node = &NodeState{NodeStateMachine: nodeStateMachine, StorageStateMachine: storageStateMachine}
+	node = &NodeState{
+		NodeStateMachine: nodeStateMachine,
+		StorageStateMachine: storageStateMachine,
+	}
 	node.SetCurrentTerm(currentTermValue)
 	node.SetVotedFor(votedForValue)
 	node.log = &logEntries
@@ -153,6 +156,9 @@ func (state *NodeState) SetLogEntry(index uint32, entry LogEntry) error {
 		return err
 	}
 
+	for i := uint32(len(*state.log)); i < index; i++ {
+		*state.log = append(*state.log, LogEntry{})
+	}
 	*state.log = append(*state.log, entry)
 	return nil
 }
@@ -162,9 +168,10 @@ func (state NodeState) LogLength() uint32 {
 	return uint32(len(*state.log))
 }
 
-// Returns the LogEntry at the specified index.
+// Returns the LogEntry at the specified index. Note that log indices start
+// at 1, but the slice indices start at 0.
 func (state NodeState) Log(index uint32) LogEntry {
-	return (*state.log)[index]
+	return (*state.log)[index - 1]
 }
 
 // Returns the node's CommitIndex.

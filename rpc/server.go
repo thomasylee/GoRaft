@@ -25,8 +25,12 @@ func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesReques
 	}
 
 	nodeState := state.GetNodeState()
-	response := &AppendEntriesResponse{Term: nodeState.CurrentTerm(), Success: false}
+	response := &AppendEntriesResponse{
+		Term: nodeState.CurrentTerm(),
+		Success: false,
+	}
 	prevLogIndex := request.PrevLogIndex
+	logLength := nodeState.LogLength()
 
 	// Don't append entries for a stale leader.
 	if request.Term < response.Term {
@@ -38,20 +42,18 @@ func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesReques
 		nodeState.SetCurrentTerm(response.Term)
 	}
 
-	global.Log.Debug("LogLength =", nodeState.LogLength())
-	if nodeState.LogLength() == 0 && prevLogIndex != 0 {
-		global.Log.Debug("success = false due to PrevLogIndex != 0 when log is empty:", request.PrevLogIndex)
+	global.Log.Debug("LogLength =", logLength)
+	if prevLogIndex > logLength {
+		global.Log.Debug("success = false due to PrevLogIndex > log length:", request.PrevLogIndex, nodeState.LogLength())
 		return response, nil
 	}
 
 	// Make sure PrevLogTerm matches the term of the entry at PrevLogIndex, unless
-	// this is the first entry to be applied.
-	global.Log.Debug("PrevLogIndex =", request.PrevLogIndex)
-	if nodeState.LogLength() != 0 && (
-		nodeState.LogLength() < request.PrevLogIndex ||
-		request.PrevLogTerm != nodeState.Log(request.PrevLogIndex).Term) {
+	// the request considers these the first entries added to the log.
+	global.Log.Debug("PrevLogIndex =", prevLogIndex)
+	if prevLogIndex > 0 && request.PrevLogTerm != nodeState.Log(prevLogIndex).Term {
 
-		global.Log.Debug("success = false due to PrevLogIndex mismatch:", request.PrevLogIndex)
+		global.Log.Debug("success = false due to PrevLogIndex mismatch:", prevLogIndex)
 		return response, nil
 	}
 
@@ -59,20 +61,17 @@ func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesReques
 	response.Success = true
 	var err error
 
-	// When the log is empty, prevLogIndex is 0 even though it's normally one less
-	// than the next available entry index. To compensate, we must make it -1 when
-	// the log is empty.
-	if nodeState.LogLength() == 0 {
-		prevLogIndex -= 1
-	}
-
 	// Save all the log entries that were received, but trust that ones with the
 	// same term don't need to be updated.
 	for i := prevLogIndex + 1; i <= prevLogIndex + uint32(len(request.Entries)); i++ {
-		if nodeState.LogLength() <= i || nodeState.Log(i).Term != response.Term {
-			global.Log.Debug(requestEntriesIndex, " : ", len(request.Entries), " : ", uint32(len(request.Entries)))
+		if nodeState.LogLength() < i || nodeState.Log(i).Term != response.Term {
 			entry := request.Entries[requestEntriesIndex]
-			logEntry := state.LogEntry{Key: entry.Key, Value: entry.Value, Term: response.Term}
+			logEntry := state.LogEntry{
+				Key: entry.Key,
+				Value: entry.Value,
+				Term: response.Term,
+			}
+
 			err = nodeState.SetLogEntry(i, logEntry)
 			if err != nil {
 				global.Log.Error(err.Error())

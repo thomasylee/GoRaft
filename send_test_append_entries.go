@@ -3,19 +3,22 @@ package main
 import (
 	"math/rand"
 	"strconv"
+	"time"
 
 	"github.com/thomasylee/GoRaft/global"
 	"github.com/thomasylee/GoRaft/rpc"
 )
 
 // The previous log index for the AppendEntries rpc call.
-const prevLogIndex uint32 = 0
+const prevLogIndex uint32 = 2
 
 // This program can be modified and used to test AppendEntries requests.
 func main() {
 	global.SetUpLogger()
 
-	value := rand.Intn(100)
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	value := r.Intn(100)
 	global.Log.Info("Generated value:", value)
 
 	request := &rpc.AppendEntriesRequest{
