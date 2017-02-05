@@ -10,24 +10,22 @@ import (
 
 	"github.com/thomasylee/GoRaft/global"
 	"github.com/thomasylee/GoRaft/state"
-
-	pb "github.com/thomasylee/GoRaft/rpc/proto"
 )
 
 // server is used to implement the GoRaft gRPC server.
 type server struct{}
 
-func (s *server) AppendEntries(ctx context.Context, request *pb.AppendEntriesRequest) (*pb.AppendEntriesResponse, error) {
+func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesRequest) (*AppendEntriesResponse, error) {
 	// Indicate that a message has been received so we don't time out.
 	global.TimeoutChannel <- true
 
 	// If the entries attribute is empty, it's just a heartbeat.
 	if len(request.Entries) == 0 {
-		return &pb.AppendEntriesResponse{Term: state.Node.CurrentTerm(), Success: true}, nil
+		return &AppendEntriesResponse{Term: state.Node.CurrentTerm(), Success: true}, nil
 	}
 
 	nodeState := state.GetNodeState()
-	response := &pb.AppendEntriesResponse{Term: nodeState.CurrentTerm(), Success: false}
+	response := &AppendEntriesResponse{Term: nodeState.CurrentTerm(), Success: false}
 	prevLogIndex := request.PrevLogIndex
 
 	// Don't append entries for a stale leader.
@@ -124,7 +122,7 @@ func RunServer(port string) {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterGoRaftServer(s, &server{})
+	RegisterGoRaftServer(s, &server{})
 
 	// Register reflection service on gRPC server.
 	reflection.Register(s)

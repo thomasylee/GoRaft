@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"time"
 
-	// "github.com/thomasylee/GoRaft/api"
 	"github.com/thomasylee/GoRaft/global"
 	"github.com/thomasylee/GoRaft/rpc"
 	"github.com/thomasylee/GoRaft/state"

@@ -6,8 +6,6 @@ import (
 
 	"github.com/thomasylee/GoRaft/global"
 	"github.com/thomasylee/GoRaft/rpc"
-
-	pb "github.com/thomasylee/GoRaft/rpc/proto"
 )
 
 // The previous log index for the AppendEntries rpc call.
@@ -20,12 +18,12 @@ func main() {
 	value := rand.Intn(100)
 	global.Log.Info("Generated value:", value)
 
-	request := &pb.AppendEntriesRequest{
+	request := &rpc.AppendEntriesRequest{
 		Term: 0,
 		LeaderId: "123",
 		PrevLogIndex: prevLogIndex,
 		PrevLogTerm: 0,
-		Entries: []*pb.AppendEntriesRequest_Entry{{Term: 0, Key: "a", Value: strconv.Itoa(value)}},
+		Entries: []*rpc.AppendEntriesRequest_Entry{{Term: 0, Key: "a", Value: strconv.Itoa(value)}},
 		LeaderCommit: 0,
 	}
 

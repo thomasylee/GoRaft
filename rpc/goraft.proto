@@ -1,6 +1,8 @@
 syntax = "proto3";
 package goraft;
 
+option go_package = "rpc";
+
 service GoRaft {
 	rpc AppendEntries (AppendEntriesRequest) returns (AppendEntriesResponse) {}
 }
