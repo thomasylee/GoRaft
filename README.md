@@ -33,8 +33,7 @@ Run using "go run" from the source directory, or run "go run" on the main.go fil
 $ go run main.go
 ```
 
-Curl can be used to append new entries to the node logs:
+For now, the send_test_append_entries.go program can be used to append new entries to the node logs. It must be edited before being run to include the correct request values.
 ```sh
-curl localhost:8000/append_entries \
--d '{"term": 1, "leaderId": "baf967ea-a76b-41fa-b0db-3116615dbfe6", "prevLogIndex": -1, "prevLogTerm": -1, "commitIndex": -1, "entries": [{"key": "a", "value": "1"}]}'
+go run send_test_append_entries.go
 ```
