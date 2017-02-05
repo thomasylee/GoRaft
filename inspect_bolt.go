@@ -1,0 +1,57 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/thomasylee/GoRaft/state"
+)
+
+// This program can be used to read and write to a locally stored Bolt database
+// with single value put and get commands.
+func main() {
+	bolt, err := state.NewBoltStateMachine("node_state.db")
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		action := strings.ToLower(input(reader, "Action (put/get/exit): "))
+		if action == "put" {
+			put(reader, bolt)
+		} else if action == "get" {
+			get(reader, bolt)
+		} else if action == "exit" {
+			os.Exit(0)
+		}
+	}
+}
+
+// Stores a key-value pair in the Bolt database.
+func put(reader *bufio.Reader, bolt *state.BoltStateMachine) {
+	key := input(reader, "Key: ")
+	value, _ := bolt.Get(key)
+	if value != "" && input(reader, "Overwrite value \"" + value + "\" (y/n): ") != "y" {
+		return
+	}
+	value = input(reader, "Value: ")
+	bolt.Put(key, value)
+}
+
+// Returns the value stored in the Bolt database with the specified key.
+func get(reader *bufio.Reader, bolt *state.BoltStateMachine) {
+	value, _ := bolt.Get(input(reader, "Key: "))
+	fmt.Println(value)
+}
+
+// Returns text that was typed by the user.
+func input(reader *bufio.Reader, prompt string) string {
+	fmt.Print(prompt)
+	text, _ := reader.ReadString('\n')
+	text = text[:len(text) - 1]
+	return text
+}

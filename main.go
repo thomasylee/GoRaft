@@ -1,10 +1,12 @@
 package main
 
 import (
+	"strconv"
 	"time"
 
-	"github.com/thomasylee/GoRaft/api"
+	// "github.com/thomasylee/GoRaft/api"
 	"github.com/thomasylee/GoRaft/global"
+	"github.com/thomasylee/GoRaft/rpc"
 	"github.com/thomasylee/GoRaft/state"
 )
 
@@ -31,7 +33,7 @@ func main() {
  * Runs the infinite loop that keeps the node active.
  */
 func runNode() {
-	go api.RunServer(global.Config["api_port"].(int))
+	go rpc.RunServer(strconv.Itoa(global.Config["api_port"].(int)))
 
 	// Randomize the election timeout to minimize the risk of two nodes
 	// initiating an election at the same time.

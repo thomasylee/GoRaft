@@ -12,7 +12,7 @@ import (
 type LogEntry struct {
 	Key string
 	Value string
-	Term int
+	Term uint32
 }
 
 // Define constants for important keys in the Bolt database.
@@ -30,7 +30,7 @@ const (
 // retrieved using the respective NodeState methods.
 type NodeState struct {
 	// The latest term the node has seen.
-	currentTerm int
+	currentTerm uint32
 
 	// The candidateId (UUID) that was voted for the current term.
 	votedFor string
@@ -44,17 +44,17 @@ type NodeState struct {
 	StorageStateMachine StateMachine
 
 	// Index of the highest log entry known to be committed.
-	commitIndex int
+	commitIndex uint32
 
 	// Index of the highest log entry applied to this node's storage state machine.
-	lastApplied int
+	lastApplied uint32
 
 	// (Leader only) For each node, the index of the next log entry to send to.
-	nextIndex map[int]int
+	nextIndex map[uint32]uint32
 
 	// (Leader only) For each node, the index of the highest log entry known to be replicated on
 	// the node.
-	matchIndex map[int]int
+	matchIndex map[uint32]uint32
 }
 
 var Node *NodeState
@@ -81,7 +81,7 @@ func GetNodeState() *NodeState {
 // Returns a NodeState based on values in the node state Bolt database, using
 // default values if the database does not exist or have any values in it.
 func NewNodeState(nodeStateMachine StateMachine, storageStateMachine StateMachine) *NodeState {
-	var currentTermValue int
+	var currentTermValue uint32
 	retrievedCurrentTerm, err := nodeStateMachine.Get(currentTerm)
 	if err != nil {
 		global.Log.Panic("Failed to retrieve CurrentTerm:", err.Error())
@@ -89,10 +89,11 @@ func NewNodeState(nodeStateMachine StateMachine, storageStateMachine StateMachin
 	if retrievedCurrentTerm == "" {
 		currentTermValue = 0
 	} else {
-		currentTermValue, err = strconv.Atoi(retrievedCurrentTerm)
+		currentTermValueInt, err := strconv.Atoi(retrievedCurrentTerm)
 		if err != nil {
 			global.Log.Panic("Failed to convert CurrentTerm to int:", err.Error())
 		}
+		currentTermValue = uint32(currentTermValueInt)
 	}
 
 	votedForValue, err := nodeStateMachine.Get(votedFor)
@@ -104,6 +105,7 @@ func NewNodeState(nodeStateMachine StateMachine, storageStateMachine StateMachin
 	if err != nil {
 		global.Log.Panic("Failed to retrieve log entries:", err.Error())
 	}
+	global.Log.Debug("Pre-existing log entries:", len(logEntries))
 
 	var node *NodeState
 	node = &NodeState{NodeStateMachine: nodeStateMachine, StorageStateMachine: storageStateMachine}
@@ -115,14 +117,14 @@ func NewNodeState(nodeStateMachine StateMachine, storageStateMachine StateMachin
 }
 
 // Sets the current term in memory and in the node state machine.
-func (state *NodeState) SetCurrentTerm(newCurrentTerm int) {
+func (state *NodeState) SetCurrentTerm(newCurrentTerm uint32) {
 	state.currentTerm = newCurrentTerm
 	global.Log.Debugf("CurrentTerm updated: %d", newCurrentTerm)
-	state.NodeStateMachine.Put(currentTerm, strconv.Itoa(newCurrentTerm))
+	state.NodeStateMachine.Put(currentTerm, strconv.Itoa(int(newCurrentTerm)))
 }
 
 // Returns the current term recognized by the node.
-func (state *NodeState) CurrentTerm() int {
+func (state *NodeState) CurrentTerm() uint32 {
 	return state.currentTerm;
 }
 
@@ -137,16 +139,16 @@ func (state *NodeState) VotedFor() string {
 	return state.votedFor;
 }
 
-// Append the log entry to the NodeState's log.
+// Sets the log entry in the NodeState's log at the given index.
 // Note that this method does not do any safety checking to prevent overwriting
 // existing entries; that check should be done by the caller beforehand.
-func (state *NodeState) AppendEntryToLog(index int, entry LogEntry) error {
+func (state *NodeState) SetLogEntry(index uint32, entry LogEntry) error {
 	jsonValue, err := json.Marshal(entry)
 	if err != nil {
 		return err
 	}
 
-	err = state.NodeStateMachine.Put(strconv.Itoa(index), string(jsonValue))
+	err = state.NodeStateMachine.Put(strconv.Itoa(int(index)), string(jsonValue))
 	if err != nil {
 		return err
 	}
@@ -156,31 +158,36 @@ func (state *NodeState) AppendEntryToLog(index int, entry LogEntry) error {
 }
 
 // Returns the number of entries in the node's log.
-func (state *NodeState) LogLength() int {
-	return len(*state.log)
+func (state NodeState) LogLength() uint32 {
+	return uint32(len(*state.log))
 }
 
 // Returns the LogEntry at the specified index.
-func (state *NodeState) Log(index int) LogEntry {
+func (state NodeState) Log(index uint32) LogEntry {
 	return (*state.log)[index]
 }
 
 // Returns the node's CommitIndex.
-func (state *NodeState) CommitIndex() int {
+func (state NodeState) CommitIndex() uint32 {
 	return state.commitIndex
 }
 
+// Sets the node's CommitIndex to the given value.
+func (state *NodeState) SetCommitIndex(newCommitIndex uint32) {
+	state.commitIndex = newCommitIndex
+}
+
 // Returns the node's LastApplied.
-func (state *NodeState) LastApplied() int {
+func (state NodeState) LastApplied() uint32 {
 	return state.lastApplied
 }
 
 // Returns the node's NextIndex (only valid for leader nodes).
-func (state *NodeState) NextIndex() map[int]int {
+func (state NodeState) NextIndex() map[uint32]uint32 {
 	return state.nextIndex
 }
 
 // Returns the node's MatchIndex (only valid for leader nodes).
-func (state *NodeState) MatchIndex() map[int]int {
+func (state NodeState) MatchIndex() map[uint32]uint32 {
 	return state.matchIndex
 }
