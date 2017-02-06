@@ -11,7 +11,7 @@ func createNodeState() *NodeState {
 	return NewNodeState(NewMemoryStateMachine(), NewMemoryStateMachine())
 }
 
-func Test_AppendEntryToLog_WithValidNodeAndParams_AppendsEntryToMemAndStateMachine(t *testing.T) {
+func Test_SetLogEntry_WithValidNodeAndParams_SetsEntryInMemAndStateMachine(t *testing.T) {
 	global.SetUpLogger()
 	global.SetLogLevel("critical")
 
