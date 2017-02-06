@@ -19,26 +19,28 @@ func Test_AppendEntryToLog_WithValidNodeAndParams_AppendsEntryToMemAndStateMachi
 	node.log = &[]LogEntry{}
 
 	var tests = []struct {
-		index int
+		index uint32
 		entry LogEntry
 		jsonRep string
 	}{
-		{0, LogEntry{"a", "A", 0}, "{\"Key\":\"a\",\"Value\":\"A\",\"Term\":0}"},
-		{1, LogEntry{"b", "B", 0}, "{\"Key\":\"b\",\"Value\":\"B\",\"Term\":0}"},
-		{2, LogEntry{"c", "C", 1}, "{\"Key\":\"c\",\"Value\":\"C\",\"Term\":1}"},
-		{3, LogEntry{"d", "D", 2}, "{\"Key\":\"d\",\"Value\":\"D\",\"Term\":2}"},
-		{4, LogEntry{"e", "E", 2}, "{\"Key\":\"e\",\"Value\":\"E\",\"Term\":2}"},
+		{1, LogEntry{"a", "A", 0}, "{\"Key\":\"a\",\"Value\":\"A\",\"Term\":0}"},
+		{2, LogEntry{"b", "B", 0}, "{\"Key\":\"b\",\"Value\":\"B\",\"Term\":0}"},
+		{3, LogEntry{"c", "C", 1}, "{\"Key\":\"c\",\"Value\":\"C\",\"Term\":1}"},
+		{4, LogEntry{"d", "D", 2}, "{\"Key\":\"d\",\"Value\":\"D\",\"Term\":2}"},
+		{5, LogEntry{"e", "E", 2}, "{\"Key\":\"e\",\"Value\":\"E\",\"Term\":2}"},
 	}
 
 	for _, test := range tests {
-		node.AppendEntryToLog(test.index, test.entry)
+		node.SetLogEntry(test.index, test.entry)
 
-		entryInMem := node.Log(test.index)
+		// Log entry indices start at 1, but the entryInMem slice indices start at 0,
+		// so we must add 1 to make the indices align.
+		entryInMem := node.Log(test.index + 1)
 		if entryInMem != test.entry {
 			t.Error("Log entry in memory doesn't match:", test.index, entryInMem)
 		}
 
-		jsonInSM, err := node.NodeStateMachine.Get(strconv.Itoa(test.index))
+		jsonInSM, err := node.NodeStateMachine.Get(strconv.Itoa(int(test.index)))
 		if err != nil {
 			t.Errorf("Error processing entry %d: %s", test.index, err.Error())
 		} else if jsonInSM != test.jsonRep {
