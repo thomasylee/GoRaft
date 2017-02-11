@@ -37,7 +37,7 @@ func NewBoltStateMachine(dbFile string) (boltSM *BoltStateMachine, err error) {
  * Ensures that a bucket with the given name exists by creating it if it doesn't
  * already exist.
  */
-func (boltSM *BoltStateMachine) CreateBucketIfNotExists(name string) error {
+func (boltSM BoltStateMachine) CreateBucketIfNotExists(name string) error {
 	return boltSM.db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
