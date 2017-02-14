@@ -156,7 +156,7 @@ func (state *NodeState) SetLogEntry(index uint32, entry LogEntry) error {
 		return err
 	}
 
-	for i := uint32(len(*state.log)); i < index; i++ {
+	for i := uint32(len(*state.log)); i < index - 1; i++ {
 		*state.log = append(*state.log, LogEntry{})
 	}
 	*state.log = append(*state.log, entry)
