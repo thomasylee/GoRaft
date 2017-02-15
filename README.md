@@ -14,7 +14,12 @@ The goal of this project is for me to learn Go and become better acquainted with
 GoRaft depends on the following external packages:
 * [github.com/boltdb/bolt](https://github.com/boltdb/bolt) - To store persistent state
 * [github.com/go-yaml/yaml](https://github.com/go-yaml/yaml) - To parse the YAML config file
+* [github.com/golang/protobuf](https://github.com/golang/protobuf) - To serialize gRPC requests/responses
 * [github.com/op/go-logging](https://github.com/op/go-logging) - For leveled logging
+* [golang.org/x/net/context](https://godoc.org/golang.org/x/net/context) - For context handling across gRPC requests
+* [google.golang.org/grpc](https://godoc.org/google.golang.org/grpc) - To make/receive gRPC requests/responses
+
+This package uses gRPC to send/receive rpc requests between nodes. \*.proto files will need to be compiled into Go code using protoc to be usable by gRPC. The executable file generate_protobuf.sh runs the necessary commands to compile all \*.proto files.
 
 ## Getting Started
 
