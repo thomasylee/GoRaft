@@ -20,7 +20,7 @@ func main() {
 	global.LoadConfig()
 
 	global.Log.Info("Loaded config:", global.Config)
-	global.SetLogLevel(global.Config["log_level"].(string))
+	global.SetLogLevel(global.Config.LogLevel)
 
 	// Check if state was loaded correctly from previous run.
 	global.Log.Debug(state.GetNodeState())
@@ -32,12 +32,12 @@ func main() {
  * Runs the infinite loop that keeps the node active.
  */
 func runNode() {
-	go rpc.RunServer(strconv.Itoa(global.Config["api_port"].(int)))
+	go rpc.RunServer(strconv.Itoa(int(global.Config.Nodes[global.Config.NodeId].ApiPort)))
 
 	// Randomize the election timeout to minimize the risk of two nodes
 	// initiating an election at the same time.
-	electionTimeout := global.Config["election_timeout"].(int)
-	electionTimeoutJitter := global.Config["election_timeout_jitter"].(int)
+	electionTimeout := global.Config.ElectionTimeout
+	electionTimeoutJitter := global.Config.ElectionTimeoutJitter
 	for {
 		timeout := global.GenerateTimeout(electionTimeout, electionTimeoutJitter)
 		select {

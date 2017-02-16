@@ -39,22 +39,25 @@ type NodeState struct {
 	// when the entry was received from the leader.
 	log *[]LogEntry
 
+	// The node id of the current leader.
+	LeaderId string
+
 	// Node state and stored state are stored by different state machines.
 	NodeStateMachine StateMachine
 	StorageStateMachine StateMachine
 
 	// Index of the highest log entry known to be committed.
-	commitIndex uint32
+	CommitIndex uint32
 
 	// Index of the highest log entry applied to this node's storage state machine.
-	lastApplied uint32
+	LastApplied uint32
 
 	// (Leader only) For each node, the index of the next log entry to send to.
-	nextIndex map[uint32]uint32
+	NextIndex map[string]uint32
 
 	// (Leader only) For each node, the index of the highest log entry known to be replicated on
 	// the node.
-	matchIndex map[uint32]uint32
+	MatchIndex map[string]uint32
 }
 
 var Node *NodeState
@@ -172,29 +175,4 @@ func (state NodeState) LogLength() uint32 {
 // at 1, but the slice indices start at 0.
 func (state NodeState) Log(index uint32) LogEntry {
 	return (*state.log)[index - 1]
-}
-
-// Returns the node's CommitIndex.
-func (state NodeState) CommitIndex() uint32 {
-	return state.commitIndex
-}
-
-// Sets the node's CommitIndex to the given value.
-func (state *NodeState) SetCommitIndex(newCommitIndex uint32) {
-	state.commitIndex = newCommitIndex
-}
-
-// Returns the node's LastApplied.
-func (state NodeState) LastApplied() uint32 {
-	return state.lastApplied
-}
-
-// Returns the node's NextIndex (only valid for leader nodes).
-func (state NodeState) NextIndex() map[uint32]uint32 {
-	return state.nextIndex
-}
-
-// Returns the node's MatchIndex (only valid for leader nodes).
-func (state NodeState) MatchIndex() map[uint32]uint32 {
-	return state.matchIndex
 }

@@ -1,6 +1,6 @@
 # Maximum log level that will get logged.
 # See github.com/op/go-logging for available log levels.
-log_level: "debug"
+log_level: debug
 
 # Election timeout average in milliseconds.
 election_timeout: 250
@@ -8,5 +8,12 @@ election_timeout: 250
 # Election timeout jitter in milliseconds.
 election_timeout_jitter: 100
 
-# Port for the REST API to listen on for AppendEntries and RequestVote calls.
-api_port: 8000
+# The id of the local node.
+node_id: host1
+
+# All nodes in the cluster, including the local node.
+node_hosts:
+  host1:
+    url: localhost
+    api_port: 8000
+    rpc_port: 9000

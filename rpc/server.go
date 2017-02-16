@@ -100,13 +100,16 @@ func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesReques
 		nodeState.NodeStateMachine.Put(key, "")
 	}
 
+	// Update the leader id.
+	nodeState.LeaderId = request.LeaderId
+
 	// Update the node's commitIndex when the request's LeaderCommit index is
 	// higher.
-	if request.LeaderCommit > nodeState.CommitIndex() {
+	if request.LeaderCommit > nodeState.CommitIndex {
 		if request.LeaderCommit > nodeState.LogLength() {
-			nodeState.SetCommitIndex(nodeState.LogLength() - 1)
+			nodeState.CommitIndex = nodeState.LogLength() - 1
 		} else {
-			nodeState.SetCommitIndex(request.LeaderCommit)
+			nodeState.CommitIndex = request.LeaderCommit
 		}
 	}
 
