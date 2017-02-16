@@ -67,7 +67,6 @@ func Test_AppendEntries_WhenTermIsOlderThanCurrentTerm_ReturnsSuccessFalse(t *te
 		PrevLogTerm: 0,
 		Entries: []*AppendEntriesRequest_Entry{
 			&AppendEntriesRequest_Entry{
-				Term: 0,
 				Key: "a",
 				Value: "A",
 			},
@@ -105,7 +104,6 @@ func Test_AppendEntries_WhenLogAtPrevLogIndexDoesNotMatch_ReturnsSuccessFalse(t 
 		PrevLogTerm: 0,
 		Entries: []*AppendEntriesRequest_Entry{
 			&AppendEntriesRequest_Entry{
-				Term: 1,
 				Key: "b",
 				Value: "B",
 			},
@@ -143,7 +141,6 @@ func Test_AppendEntries_WhenLeaderCommitIsGreaterThanCommitIndex_IncreasesCommit
 		PrevLogTerm: 0,
 		Entries: []*AppendEntriesRequest_Entry{
 			&AppendEntriesRequest_Entry{
-				Term: 1,
 				Key: "b",
 				Value: "B",
 			},
@@ -164,7 +161,7 @@ func Test_AppendEntries_WhenLeaderCommitIsGreaterThanCommitIndex_IncreasesCommit
 		t.Error("Term was not 1:", response.Term)
 	}
 
-	if state.Node.CommitIndex() != 2 {
-		t.Error("CommitIndex was not 2:", state.Node.CommitIndex())
+	if state.Node.CommitIndex != 2 {
+		t.Error("CommitIndex was not 2:", state.Node.CommitIndex)
 	}
 }
