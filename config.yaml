@@ -8,6 +8,9 @@ election_timeout: 250
 # Election timeout jitter in milliseconds.
 election_timeout_jitter: 100
 
+# Number of seconds between heartbeats sent by the leader.
+leader_heartbeat_period: 50
+
 # The id of the local node.
 node_id: host1
 
@@ -17,3 +20,7 @@ node_hosts:
     url: localhost
     api_port: 8000
     rpc_port: 9000
+  host2:
+    url: localhost
+    api_port: 1000
+    rpc_port: 2000
