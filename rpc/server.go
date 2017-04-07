@@ -15,7 +15,8 @@ import (
 // server is used to implement the GoRaft gRPC server.
 type server struct{}
 
-// Appends the entries to the node state's log and updates other attributes in the node state as necessary.
+// Appends the entries to the node state's log and updates other attributes in the node
+// state as necessary.
 func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesRequest) (*AppendEntriesResponse, error) {
 	// Indicate that a message has been received so we don't time out.
 	global.TimeoutChannel <- true
@@ -118,7 +119,20 @@ func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesReques
 	return response, err
 }
 
-// Runs the gRPC server, which can receive AppendEntries requests.
+// Requests a vote for the node as the new leader.
+func (s *server) RequestVote(ctx context.Context, request *RequestVoteRequest) (*RequestVoteResponse, error) {
+	nodeState := state.GetNodeState()
+	var err error
+
+	response := &RequestVoteResponse{
+		Term: nodeState.CurrentTerm(),
+		VoteGranted: false,
+	}
+
+	return response, err
+}
+
+// Runs the RPC server on the port configured in config.yaml.
 func RunServer(port string) {
 	lis, err := net.Listen("tcp", ":" + port)
 	if err != nil {
