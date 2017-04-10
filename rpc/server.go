@@ -129,6 +129,28 @@ func (s *server) RequestVote(ctx context.Context, request *RequestVoteRequest) (
 		VoteGranted: false,
 	}
 
+	// Request's term is too old, so reject the vote.
+	if request.Term < nodeState.CurrentTerm() {
+		return response, err
+	}
+
+	// A vote has been cast, and it is not for the request's candidate.
+	if nodeState.VotedFor() != "" && nodeState.VotedFor() != request.CandidateId {
+		return response, err
+	}
+
+	// The candidate's log is out of date.
+	if request.LastLogIndex < nodeState.LogLength() {
+		return response, err
+	}
+
+	// The candidate's log disagrees with this node's log.
+	if request.LastLogTerm != nodeState.Log(request.LastLogIndex).Term {
+		return response, err
+	}
+
+	response.VoteGranted = true
+
 	return response, err
 }
 
