@@ -36,6 +36,12 @@ $ go get github.com/thomasylee/GoRaft
 ### Configuring
 Configurations can be found in [config.yaml](https://github.com/thomasylee/GoRaft/blob/master/config.yaml). The details of each configuration is explained in the comments above the relevant key-value pairs.
 
+### Testing
+
+```sh
+$ go test -cover ./...
+```
+
 ### Running
 Run using "go run" from the source directory, or run "go run" on the main.go file itself:
 ```sh
@@ -44,5 +50,7 @@ $ go run main.go
 
 For now, the send_test_append_entries.go program can be used to append new entries to the node logs. It must be edited before being run to include the correct request values.
 ```sh
+# Rename, since two files with main() methods will break the test setup.
+mv send_test_append_entries.go2 send_test_append_entries.go
 go run send_test_append_entries.go
 ```

@@ -3,5 +3,11 @@ go:
   - "1.10"
 before_install:
   - go get github.com/mattn/goveralls
+  - go get github.com/boltdb/bolt
+  - go get github.com/go-yaml/yaml
+  - go get github.com/golang/protobuf/proto
+  - go get github.com/op/go-logging
+  - go get golang.org/x/net/context
+  - go get google.golang.org/grpc
 script:
   - $HOME/gopath/bin/goveralls -v -service=travis-ci
