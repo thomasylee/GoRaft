@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/thomasylee/GoRaft.svg?branch=master)](https://travis-ci.org/thomasylee/GoRaft)
+[![Coverage Status](https://coveralls.io/repos/github/thomasylee/GoRaft/badge.svg)](https://coveralls.io/github/thomasylee/GoRaft)
+[![Go Report Card](https://goreportcard.com/badge/github.com/thomasylee/GoRaft)](https://goreportcard.com/report/github.com/thomasylee/GoRaft)
+
 # GoRaft
 GoRaft is an implementation of the Raft consensus algorithm written in Go.
 
