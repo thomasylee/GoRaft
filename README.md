@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/thomasylee/GoRaft.svg?branch=master)](https://travis-ci.org/thomasylee/GoRaft)
-[![Coverage Status](https://coveralls.io/repos/github/thomasylee/GoRaft/badge.svg)](https://coveralls.io/github/thomasylee/GoRaft)
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/17f8f1370cae4b05a2677a85213deb81)](https://www.codacy.com/app/thomasylee/GoRaft?utm_source=github.com&utm_medium=referral&utm_content=thomasylee/GoRaft&utm_campaign=Badge_Coverage)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thomasylee/GoRaft)](https://goreportcard.com/report/github.com/thomasylee/GoRaft)
 
 # GoRaft
