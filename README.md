@@ -39,7 +39,7 @@ Configurations can be found in [config.yaml](https://github.com/thomasylee/GoRaf
 ### Testing
 
 ```sh
-$ go test -cover ./...
+$ go test -cover -v ./...
 ```
 
 ### Running
@@ -53,4 +53,11 @@ For now, the send_test_append_entries.go program can be used to append new entri
 # Rename, since two files with main() methods will break the test setup.
 mv send_test_append_entries.go2 send_test_append_entries.go
 go run send_test_append_entries.go
+```
+
+The inspect_bolt.go file can be used to alter and inspect Bolt database files.
+```sh
+# Rename, since two files with main() methods will break the test setup.
+mv run inspect_bolt.go2 inspect_bolt.go
+go run inspect_bolt.go
 ```
