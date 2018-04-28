@@ -12,7 +12,7 @@ import (
 // This program can be used to read and write to a locally stored Bolt database
 // with single value put and get commands.
 func main() {
-	bolt, err := state.NewBoltStateMachine("node_state.db")
+	bolt, err := state.NewBoltDataStore("node_state.db")
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -32,7 +32,7 @@ func main() {
 }
 
 // Stores a key-value pair in the Bolt database.
-func put(reader *bufio.Reader, bolt *state.BoltStateMachine) {
+func put(reader *bufio.Reader, bolt *state.BoltDataStore) {
 	key := input(reader, "Key: ")
 	value, _ := bolt.Get(key)
 	if value != "" && input(reader, "Overwrite value \"" + value + "\" (y/n): ") != "y" {
@@ -43,7 +43,7 @@ func put(reader *bufio.Reader, bolt *state.BoltStateMachine) {
 }
 
 // Returns the value stored in the Bolt database with the specified key.
-func get(reader *bufio.Reader, bolt *state.BoltStateMachine) {
+func get(reader *bufio.Reader, bolt *state.BoltDataStore) {
 	value, _ := bolt.Get(input(reader, "Key: "))
 	fmt.Println(value)
 }

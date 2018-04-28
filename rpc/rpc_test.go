@@ -27,8 +27,8 @@ func resetTestEnvironment() {
 	global.TimeoutChannel = make(chan bool, 1)
 
 	state.Node = state.NewNodeState(
-		state.NewMemoryStateMachine(),
-		state.NewMemoryStateMachine())
+		state.NewMemoryDataStore(),
+		state.NewMemoryDataStore())
 }
 
 func Test_AppendEntries_WhenRequestHasNoEntries_ReturnsSuccessTrue(t *testing.T) {

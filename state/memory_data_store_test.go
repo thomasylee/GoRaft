@@ -5,7 +5,7 @@ import (
 )
 
 func Test_RetrieveLogEntries_WhenNoEntriesExist_ReturnsEmptySlice(t *testing.T) {
-	entries, err := NewMemoryStateMachine().RetrieveLogEntries(1, 5)
+	entries, err := NewMemoryDataStore().RetrieveLogEntries(1, 5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func Test_RetrieveLogEntries_WhenWholeRangeExists_ReturnsLogEntriesInRange(t *te
 		{"4", LogEntry{"d", "D", 2}, "{\"Key\":\"d\",\"Value\":\"D\",\"Term\":2}"},
 	}
 
-	stateMachine := NewMemoryStateMachine()
+	stateMachine := NewMemoryDataStore()
 	for _, test := range tests {
 		stateMachine.Put(test.key, test.jsonRep)
 	}

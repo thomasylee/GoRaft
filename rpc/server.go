@@ -91,7 +91,7 @@ func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesReques
 	// index given by the request.
 	for i := prevLogIndex + uint32(len(request.Entries)) + 1; ; i++ {
 		key := strconv.Itoa(int(i))
-		value, err := nodeState.NodeStateMachine.Get(key)
+		value, err := nodeState.NodeDataStore.Get(key)
 		if err != nil {
 			global.Log.Error(err.Error())
 			break
@@ -99,7 +99,7 @@ func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesReques
 		if value == "" {
 			break
 		}
-		nodeState.NodeStateMachine.Put(key, "")
+		nodeState.NodeDataStore.Put(key, "")
 	}
 
 	// Update the leader id.

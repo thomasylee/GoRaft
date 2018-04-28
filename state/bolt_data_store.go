@@ -14,18 +14,18 @@ import (
 const bucket string = "State"
 
 /**
- * A BoltStateMachine has a Bolt database that it uses to store key-value pairs and
+ * A BoltDataStore has a Bolt database that it uses to store key-value pairs and
  * retrieve values by their keys.
  */
-type BoltStateMachine struct {
+type BoltDataStore struct {
 	db *bolt.DB
 }
 
 /**
- * Returns a new instance of the BoltStateMachine type.
+ * Returns a new instance of the BoltDataStore type.
  */
-func NewBoltStateMachine(dbFile string) (boltSM *BoltStateMachine, err error) {
-	boltSM = &BoltStateMachine{}
+func NewBoltDataStore(dbFile string) (boltSM *BoltDataStore, err error) {
+	boltSM = &BoltDataStore{}
 	boltSM.db, err = bolt.Open(dbFile, 0600, &bolt.Options{Timeout: 1 * time.Second})
 
 	boltSM.CreateBucketIfNotExists(bucket)
@@ -37,7 +37,7 @@ func NewBoltStateMachine(dbFile string) (boltSM *BoltStateMachine, err error) {
  * Ensures that a bucket with the given name exists by creating it if it doesn't
  * already exist.
  */
-func (boltSM BoltStateMachine) CreateBucketIfNotExists(name string) error {
+func (boltSM BoltDataStore) CreateBucketIfNotExists(name string) error {
 	return boltSM.db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucket))
 		if err != nil {
@@ -51,7 +51,7 @@ func (boltSM BoltStateMachine) CreateBucketIfNotExists(name string) error {
 /**
  * Writes a key-value pair to the Bolt database.
  */
-func (boltSM BoltStateMachine) Put(key string, value string) error {
+func (boltSM BoltDataStore) Put(key string, value string) error {
 	return boltSM.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(bucket))
 
@@ -63,7 +63,7 @@ func (boltSM BoltStateMachine) Put(key string, value string) error {
 /**
  * Returns the value of the specified key stored in the Bolt database.
  */
-func (boltSM BoltStateMachine) Get(key string) (string, error) {
+func (boltSM BoltDataStore) Get(key string) (string, error) {
 	var value string
 
 	err := boltSM.db.View(func(tx *bolt.Tx) error {
@@ -85,7 +85,7 @@ func (boltSM BoltStateMachine) Get(key string) (string, error) {
  *
  * TODO: Use a more efficient method than querying each index one at a time.
  */
-func (boltSM BoltStateMachine) RetrieveLogEntries(firstIndex int, lastIndex int) ([]LogEntry, error) {
+func (boltSM BoltDataStore) RetrieveLogEntries(firstIndex int, lastIndex int) ([]LogEntry, error) {
 	entries := []LogEntry{}
 	for i := firstIndex; i <= lastIndex; i++ {
 		jsonValue, err := boltSM.Get(strconv.Itoa(i))

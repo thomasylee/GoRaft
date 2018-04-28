@@ -43,8 +43,8 @@ type NodeState struct {
 	LeaderId string
 
 	// Node state and stored state are stored by different state machines.
-	NodeStateMachine StateMachine
-	StorageStateMachine StateMachine
+	NodeDataStore DataStore
+	StorageDataStore DataStore
 
 	// Index of the highest log entry known to be committed.
 	CommitIndex uint32
@@ -69,23 +69,23 @@ func GetNodeState() *NodeState {
 		return Node
 	}
 
-	nodeStateMachine, err := NewBoltStateMachine("node_state.db")
+	nodeDataStore, err := NewBoltDataStore("node_state.db")
 	if err != nil {
-		global.Log.Panic("Failed to initialize nodeStateMachine:", err.Error())
+		global.Log.Panic("Failed to initialize nodeDataStore:", err.Error())
 	}
-	storageStateMachine, err := NewBoltStateMachine("state.db")
+	storageDataStore, err := NewBoltDataStore("state.db")
 	if err != nil {
-		global.Log.Panic("Failed to initialize storageStateMachine:", err.Error())
+		global.Log.Panic("Failed to initialize storageDataStore:", err.Error())
 	}
-	Node = NewNodeState(nodeStateMachine, storageStateMachine)
+	Node = NewNodeState(nodeDataStore, storageDataStore)
 	return Node
 }
 
 // Returns a NodeState based on values in the node state Bolt database, using
 // default values if the database does not exist or have any values in it.
-func NewNodeState(nodeStateMachine StateMachine, storageStateMachine StateMachine) *NodeState {
+func NewNodeState(nodeDataStore DataStore, storageDataStore DataStore) *NodeState {
 	var currentTermValue uint32
-	retrievedCurrentTerm, err := nodeStateMachine.Get(currentTerm)
+	retrievedCurrentTerm, err := nodeDataStore.Get(currentTerm)
 	if err != nil {
 		global.Log.Panic("Failed to retrieve CurrentTerm:", err.Error())
 	}
@@ -99,12 +99,12 @@ func NewNodeState(nodeStateMachine StateMachine, storageStateMachine StateMachin
 		currentTermValue = uint32(currentTermValueInt)
 	}
 
-	votedForValue, err := nodeStateMachine.Get(votedFor)
+	votedForValue, err := nodeDataStore.Get(votedFor)
 	if err != nil {
 		global.Log.Panic("Failed to retrieve VotedFor:", err.Error())
 	}
 
-	logEntries, err := nodeStateMachine.RetrieveLogEntries(1, 1000000)
+	logEntries, err := nodeDataStore.RetrieveLogEntries(1, 1000000)
 	if err != nil {
 		global.Log.Panic("Failed to retrieve log entries:", err.Error())
 	}
@@ -112,8 +112,8 @@ func NewNodeState(nodeStateMachine StateMachine, storageStateMachine StateMachin
 
 	var node *NodeState
 	node = &NodeState{
-		NodeStateMachine: nodeStateMachine,
-		StorageStateMachine: storageStateMachine,
+		NodeDataStore: nodeDataStore,
+		StorageDataStore: storageDataStore,
 	}
 	node.SetCurrentTerm(currentTermValue)
 	node.SetVotedFor(votedForValue)
@@ -126,7 +126,7 @@ func NewNodeState(nodeStateMachine StateMachine, storageStateMachine StateMachin
 func (state *NodeState) SetCurrentTerm(newCurrentTerm uint32) {
 	state.currentTerm = newCurrentTerm
 	global.Log.Debugf("CurrentTerm updated: %d", newCurrentTerm)
-	state.NodeStateMachine.Put(currentTerm, strconv.Itoa(int(newCurrentTerm)))
+	state.NodeDataStore.Put(currentTerm, strconv.Itoa(int(newCurrentTerm)))
 }
 
 // Returns the current term recognized by the node.
@@ -137,7 +137,7 @@ func (state *NodeState) CurrentTerm() uint32 {
 // Sets VotedFor in memory and in the node state machine.
 func (state *NodeState) SetVotedFor(newVotedFor string) {
 	state.votedFor = newVotedFor
-	state.NodeStateMachine.Put(votedFor, newVotedFor)
+	state.NodeDataStore.Put(votedFor, newVotedFor)
 }
 
 // Returns the node's VotedFor.
@@ -154,7 +154,7 @@ func (state *NodeState) SetLogEntry(index uint32, entry LogEntry) error {
 		return err
 	}
 
-	err = state.NodeStateMachine.Put(strconv.Itoa(int(index)), string(jsonValue))
+	err = state.NodeDataStore.Put(strconv.Itoa(int(index)), string(jsonValue))
 	if err != nil {
 		return err
 	}

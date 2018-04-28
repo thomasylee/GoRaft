@@ -8,10 +8,10 @@ import (
 )
 
 func createNodeState() *NodeState {
-	return NewNodeState(NewMemoryStateMachine(), NewMemoryStateMachine())
+	return NewNodeState(NewMemoryDataStore(), NewMemoryDataStore())
 }
 
-func Test_SetLogEntry_WithValidNodeAndParams_SetsEntryInMemAndStateMachine(t *testing.T) {
+func Test_SetLogEntry_WithValidNodeAndParams_SetsEntryInMemAndDataStore(t *testing.T) {
 	global.SetUpLogger()
 	global.SetLogLevel("critical")
 
@@ -38,7 +38,7 @@ func Test_SetLogEntry_WithValidNodeAndParams_SetsEntryInMemAndStateMachine(t *te
 			t.Error("Log entry in memory doesn't match:", test.index, entryInMem)
 		}
 
-		jsonInSM, err := node.NodeStateMachine.Get(strconv.Itoa(int(test.index)))
+		jsonInSM, err := node.NodeDataStore.Get(strconv.Itoa(int(test.index)))
 		if err != nil {
 			t.Errorf("Error processing entry %d: %s", test.index, err.Error())
 		} else if jsonInSM != test.jsonRep {
@@ -47,7 +47,7 @@ func Test_SetLogEntry_WithValidNodeAndParams_SetsEntryInMemAndStateMachine(t *te
 	}
 }
 
-func Test_SetLogEntry_WithExistingIndex_SetsEntryInMemAndStateMachine(t *testing.T) {
+func Test_SetLogEntry_WithExistingIndex_SetsEntryInMemAndDataStore(t *testing.T) {
 	global.SetUpLogger()
 	global.SetLogLevel("critical")
 
@@ -77,7 +77,7 @@ func Test_SetLogEntry_WithExistingIndex_SetsEntryInMemAndStateMachine(t *testing
 			t.Error("Log entry in memory doesn't match:", test.index, entryInMem)
 		}
 
-		jsonInSM, err := node.NodeStateMachine.Get(strconv.Itoa(int(test.index)))
+		jsonInSM, err := node.NodeDataStore.Get(strconv.Itoa(int(test.index)))
 		if err != nil {
 			t.Errorf("Error processing entry %d: %s", test.index, err.Error())
 		} else if jsonInSM != test.jsonRep {
