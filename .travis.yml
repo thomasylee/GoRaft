@@ -2,6 +2,7 @@ language: go
 go:
   - "1.10"
 before_install:
+  - go get github.com/schrej/godacov
   - go get github.com/mattn/goveralls
   - go get github.com/boltdb/bolt
   - go get github.com/go-yaml/yaml
@@ -10,4 +11,7 @@ before_install:
   - go get golang.org/x/net/context
   - go get google.golang.org/grpc
 script:
+  - go test -coverprofile=coverage.out
   - $HOME/gopath/bin/goveralls -v -service=travis-ci
+after_success:
+  - godacov -t $CODACY_TOKEN -r ./coverage.out -c $TRAVIS_COMMIT
