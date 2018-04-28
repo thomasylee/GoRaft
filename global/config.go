@@ -23,7 +23,7 @@ type ConfigMap struct {
 	Nodes                 map[string]NodeHost `yaml:"node_hosts"`
 }
 
-// ConfigMap contains the loaded configurations.
+// Config contains the loaded configurations.
 var Config ConfigMap
 
 // LoadConfig loads the config map from config.yaml into Config.
