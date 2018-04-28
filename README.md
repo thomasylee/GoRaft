@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/thomasylee/GoRaft.svg?branch=master)](https://travis-ci.org/thomasylee/GoRaft)
-[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/17f8f1370cae4b05a2677a85213deb81)](https://www.codacy.com/app/thomasylee/GoRaft?utm_source=github.com&utm_medium=referral&utm_content=thomasylee/GoRaft&utm_campaign=Badge_Coverage)
+[![Codacy Coverage Badge](https://api.codacy.com/project/badge/Coverage/17f8f1370cae4b05a2677a85213deb81)](https://www.codacy.com/app/thomasylee/GoRaft?utm_source=github.com&utm_medium=referral&utm_content=thomasylee/GoRaft&utm_campaign=Badge_Coverage)
+[![Codacy Grade Badge](https://api.codacy.com/project/badge/Grade/17f8f1370cae4b05a2677a85213deb81)](https://www.codacy.com/app/thomasylee/GoRaft?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=thomasylee/GoRaft&amp;utm_campaign=Badge_Grade)
 [![Go Report Card](https://goreportcard.com/badge/github.com/thomasylee/GoRaft)](https://goreportcard.com/report/github.com/thomasylee/GoRaft)
 
 # GoRaft
