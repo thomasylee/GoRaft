@@ -7,22 +7,22 @@ import (
 	"github.com/thomasylee/GoRaft/global"
 )
 
-// A LogEntry represents a state machine command (Put {Key},{Value}) and the
+// LogEntry represents a state machine command (Put {Key},{Value}) and the
 // term when the entry was received by the leader.
 type LogEntry struct {
-	Key string
+	Key   string
 	Value string
-	Term uint32
+	Term  uint32
 }
 
 // Define constants for important keys in the Bolt database.
 const (
 	currentTerm string = "CurrentTerm"
-	votedFor string = "VotedFor"
-	logEntries string = "LogEntries"
+	votedFor    string = "VotedFor"
+	logEntries  string = "LogEntries"
 )
 
-// A NodeState contains both the persistent and volatile state that a node
+// NodeState contains both the persistent and volatile state that a node
 // needs to function in a Raft cluster.
 //
 // Note that currentTerm, votedFor, and log are not exported because they need
@@ -43,7 +43,7 @@ type NodeState struct {
 	LeaderId string
 
 	// Node state and stored state are stored by different state machines.
-	NodeDataStore DataStore
+	NodeDataStore    DataStore
 	StorageDataStore DataStore
 
 	// Index of the highest log entry known to be committed.
@@ -60,10 +60,11 @@ type NodeState struct {
 	MatchIndex map[string]uint32
 }
 
+// Node contains the state of the currently running host node.
 var Node *NodeState
 
-// Returns the global NodeState variable, initializing it if it hasn't yet been
-// instantiated.
+// GetNodeState returns the global NodeState variable, initializing it if it
+// has not yet been instantiated.
 func GetNodeState() *NodeState {
 	if Node != nil {
 		return Node
@@ -81,8 +82,9 @@ func GetNodeState() *NodeState {
 	return Node
 }
 
-// Returns a NodeState based on values in the node state Bolt database, using
-// default values if the database does not exist or have any values in it.
+// NewNodeState returns a NodeState based on values in the node state Bolt
+// database, using default values if the database does not exist or have any
+// values in it.
 func NewNodeState(nodeDataStore DataStore, storageDataStore DataStore) *NodeState {
 	var currentTermValue uint32
 	retrievedCurrentTerm, err := nodeDataStore.Get(currentTerm)
@@ -112,7 +114,7 @@ func NewNodeState(nodeDataStore DataStore, storageDataStore DataStore) *NodeStat
 
 	var node *NodeState
 	node = &NodeState{
-		NodeDataStore: nodeDataStore,
+		NodeDataStore:    nodeDataStore,
 		StorageDataStore: storageDataStore,
 	}
 	node.SetCurrentTerm(currentTermValue)
@@ -122,30 +124,30 @@ func NewNodeState(nodeDataStore DataStore, storageDataStore DataStore) *NodeStat
 	return node
 }
 
-// Sets the current term in memory and in the node state machine.
+// SetCurrentTerm sets the current term in memory and in the node state machine.
 func (state *NodeState) SetCurrentTerm(newCurrentTerm uint32) {
 	state.currentTerm = newCurrentTerm
 	global.Log.Debugf("CurrentTerm updated: %d", newCurrentTerm)
 	state.NodeDataStore.Put(currentTerm, strconv.Itoa(int(newCurrentTerm)))
 }
 
-// Returns the current term recognized by the node.
+// CurrentTerm returns the current term recognized by the node.
 func (state *NodeState) CurrentTerm() uint32 {
-	return state.currentTerm;
+	return state.currentTerm
 }
 
-// Sets VotedFor in memory and in the node state machine.
+// SetVotedFor sets VotedFor in memory and in the node state machine.
 func (state *NodeState) SetVotedFor(newVotedFor string) {
 	state.votedFor = newVotedFor
 	state.NodeDataStore.Put(votedFor, newVotedFor)
 }
 
-// Returns the node's VotedFor.
+// VotedFor returns the node's VotedFor.
 func (state *NodeState) VotedFor() string {
-	return state.votedFor;
+	return state.votedFor
 }
 
-// Sets the log entry in the NodeState's log at the given index.
+// SetLogEntry sets the log entry in the NodeState's log at the given index.
 // Note that this method does not do any safety checking to prevent overwriting
 // existing entries; that check should be done by the caller beforehand.
 func (state *NodeState) SetLogEntry(index uint32, entry LogEntry) error {
@@ -159,20 +161,20 @@ func (state *NodeState) SetLogEntry(index uint32, entry LogEntry) error {
 		return err
 	}
 
-	for i := uint32(len(*state.log)); i < index - 1; i++ {
+	for i := uint32(len(*state.log)); i < index-1; i++ {
 		*state.log = append(*state.log, LogEntry{})
 	}
 	*state.log = append(*state.log, entry)
 	return nil
 }
 
-// Returns the number of entries in the node's log.
+// LogLength returns the number of entries in the node's log.
 func (state NodeState) LogLength() uint32 {
 	return uint32(len(*state.log))
 }
 
-// Returns the LogEntry at the specified index. Note that log indices start
+// Log returns the LogEntry at the specified index. Note that log indices start
 // at 1, but the slice indices start at 0.
 func (state NodeState) Log(index uint32) LogEntry {
-	return (*state.log)[index - 1]
+	return (*state.log)[index-1]
 }

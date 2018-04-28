@@ -19,8 +19,8 @@ func Test_SetLogEntry_WithValidNodeAndParams_SetsEntryInMemAndDataStore(t *testi
 	node.log = &[]LogEntry{}
 
 	var tests = []struct {
-		index uint32
-		entry LogEntry
+		index   uint32
+		entry   LogEntry
 		jsonRep string
 	}{
 		{1, LogEntry{"a", "A", 0}, "{\"Key\":\"a\",\"Value\":\"A\",\"Term\":0}"},
@@ -55,8 +55,8 @@ func Test_SetLogEntry_WithExistingIndex_SetsEntryInMemAndDataStore(t *testing.T)
 	node.log = &[]LogEntry{}
 
 	var tests = []struct {
-		index uint32
-		entry LogEntry
+		index   uint32
+		entry   LogEntry
 		jsonRep string
 	}{
 		{1, LogEntry{"a", "A", 0}, "{\"Key\":\"a\",\"Value\":\"A\",\"Term\":0}"},

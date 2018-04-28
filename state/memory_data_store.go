@@ -5,23 +5,28 @@ import (
 	"strconv"
 )
 
+// MemoryDataStore stores key-value pairs in memory.
 type MemoryDataStore struct {
 	values map[string]string
 }
 
+// NewMemoryDataStore constructs a new empty MemoryDataStore.
 func NewMemoryDataStore() MemoryDataStore {
 	return MemoryDataStore{values: make(map[string]string)}
 }
 
+// Put adds a new key-value pair to the data store.
 func (sm MemoryDataStore) Put(key string, value string) error {
 	sm.values[key] = value
 	return nil
 }
 
+// Get retrieves a value based on its key.
 func (sm MemoryDataStore) Get(key string) (string, error) {
 	return sm.values[key], nil
 }
 
+// RetrieveLogEntries returns the LogEntries found between the specified indices.
 func (sm MemoryDataStore) RetrieveLogEntries(firstIndex int, lastIndex int) ([]LogEntry, error) {
 	entries := []LogEntry{}
 	for i := firstIndex; i <= lastIndex; i++ {

@@ -45,8 +45,8 @@ func Test_RetrieveBoltLogEntries_WhenNoEntriesExist_ReturnsEmptySlice(t *testing
 
 func Test_RetrieveBoltLogEntries_WhenWholeRangeExists_ReturnsLogEntriesInRange(t *testing.T) {
 	var tests = []struct {
-		key string
-		entry LogEntry
+		key     string
+		entry   LogEntry
 		jsonRep string
 	}{
 		{"1", LogEntry{"a", "A", 0}, "{\"Key\":\"a\",\"Value\":\"A\",\"Term\":0}"},

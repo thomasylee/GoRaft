@@ -9,10 +9,8 @@ import (
 	"github.com/thomasylee/GoRaft/state"
 )
 
-/**
- * The main() method is the initial method that gets run, so it will start
- * the necessary goroutines to become a functional Raft node.
- */
+// The main() method is the initial method that gets run, so it will start
+// the necessary goroutines to become a functional Raft node.
 func main() {
 	global.SetUpLogger()
 	global.Log.Info("GoRaft starting... Logger initialized.")
@@ -28,9 +26,7 @@ func main() {
 	runNode()
 }
 
-/**
- * Runs the infinite loop that keeps the node active.
- */
+// runNode runs the infinite loop that keeps the node active.
 func runNode() {
 	go rpc.RunServer(strconv.Itoa(int(global.Config.Nodes[global.Config.NodeId].ApiPort)))
 

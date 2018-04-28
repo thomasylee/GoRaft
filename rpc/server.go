@@ -15,8 +15,8 @@ import (
 // server is used to implement the GoRaft gRPC server.
 type server struct{}
 
-// Appends the entries to the node state's log and updates other attributes in the node
-// state as necessary.
+// AppendEntries adds the entries to the node state's log and updates other
+// attributes in the node state as necessary.
 func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesRequest) (*AppendEntriesResponse, error) {
 	// Indicate that a message has been received so we don't time out.
 	global.TimeoutChannel <- true
@@ -28,7 +28,7 @@ func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesReques
 
 	nodeState := state.GetNodeState()
 	response := &AppendEntriesResponse{
-		Term: nodeState.CurrentTerm(),
+		Term:    nodeState.CurrentTerm(),
 		Success: false,
 	}
 	prevLogIndex := request.PrevLogIndex
@@ -65,13 +65,13 @@ func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesReques
 
 	// Save all the log entries that were received, but trust that ones with the
 	// same term don't need to be updated.
-	for i := prevLogIndex + 1; i <= prevLogIndex + uint32(len(request.Entries)); i++ {
+	for i := prevLogIndex + 1; i <= prevLogIndex+uint32(len(request.Entries)); i++ {
 		if nodeState.LogLength() < i || nodeState.Log(i).Term != response.Term {
 			entry := request.Entries[requestEntriesIndex]
 			logEntry := state.LogEntry{
-				Key: entry.Key,
+				Key:   entry.Key,
 				Value: entry.Value,
-				Term: response.Term,
+				Term:  response.Term,
 			}
 
 			err = nodeState.SetLogEntry(i, logEntry)
@@ -119,13 +119,13 @@ func (s *server) AppendEntries(ctx context.Context, request *AppendEntriesReques
 	return response, err
 }
 
-// Requests a vote for the node as the new leader.
+// RequestVote requests a vote for the node as the new leader.
 func (s *server) RequestVote(ctx context.Context, request *RequestVoteRequest) (*RequestVoteResponse, error) {
 	nodeState := state.GetNodeState()
 	var err error
 
 	response := &RequestVoteResponse{
-		Term: nodeState.CurrentTerm(),
+		Term:        nodeState.CurrentTerm(),
 		VoteGranted: false,
 	}
 
@@ -154,9 +154,9 @@ func (s *server) RequestVote(ctx context.Context, request *RequestVoteRequest) (
 	return response, err
 }
 
-// Runs the RPC server on the port configured in config.yaml.
+// RunServer runs the RPC server on the port configured in config.yaml.
 func RunServer(port string) {
-	lis, err := net.Listen("tcp", ":" + port)
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		global.Log.Panicf("Failed to listen: %v", err)
 	}

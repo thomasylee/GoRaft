@@ -13,17 +13,13 @@ import (
 // Key-value pairs are stored in the State bucket for all Bolt databases.
 const bucket string = "State"
 
-/**
- * A BoltDataStore has a Bolt database that it uses to store key-value pairs and
- * retrieve values by their keys.
- */
+// BoltDataStore has a Bolt database that it uses to store key-value pairs and
+// retrieve values by their keys.
 type BoltDataStore struct {
 	db *bolt.DB
 }
 
-/**
- * Returns a new instance of the BoltDataStore type.
- */
+// NewBoltDataStore returns a new instance of the BoltDataStore type.
 func NewBoltDataStore(dbFile string) (boltSM *BoltDataStore, err error) {
 	boltSM = &BoltDataStore{}
 	boltSM.db, err = bolt.Open(dbFile, 0600, &bolt.Options{Timeout: 1 * time.Second})
@@ -33,10 +29,8 @@ func NewBoltDataStore(dbFile string) (boltSM *BoltDataStore, err error) {
 	return
 }
 
-/**
- * Ensures that a bucket with the given name exists by creating it if it doesn't
- * already exist.
- */
+// CreateBucketIfNotExists ensures that a bucket with the given name exists
+// by creating it if it does not already exist.
 func (boltSM BoltDataStore) CreateBucketIfNotExists(name string) error {
 	return boltSM.db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucket))
@@ -48,9 +42,7 @@ func (boltSM BoltDataStore) CreateBucketIfNotExists(name string) error {
 	})
 }
 
-/**
- * Writes a key-value pair to the Bolt database.
- */
+// Put writes a key-value pair to the Bolt database.
 func (boltSM BoltDataStore) Put(key string, value string) error {
 	return boltSM.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(bucket))
@@ -60,9 +52,7 @@ func (boltSM BoltDataStore) Put(key string, value string) error {
 	})
 }
 
-/**
- * Returns the value of the specified key stored in the Bolt database.
- */
+// Get returns the value of the specified key stored in the Bolt database.
 func (boltSM BoltDataStore) Get(key string) (string, error) {
 	var value string
 
@@ -80,11 +70,9 @@ func (boltSM BoltDataStore) Get(key string) (string, error) {
 	return value, err
 }
 
-/**
- * Returns log entries within the specified key range.
- *
- * TODO: Use a more efficient method than querying each index one at a time.
- */
+// RetrieveLogEntries returns log entries within the specified key range.
+//
+// TODO: Use a more efficient method than querying each index one at a time.
 func (boltSM BoltDataStore) RetrieveLogEntries(firstIndex int, lastIndex int) ([]LogEntry, error) {
 	entries := []LogEntry{}
 	for i := firstIndex; i <= lastIndex; i++ {

@@ -35,16 +35,16 @@ func Test_AppendEntries_WhenRequestHasNoEntries_ReturnsSuccessTrue(t *testing.T)
 	resetTestEnvironment()
 
 	request := &AppendEntriesRequest{
-		Term: 0,
-		LeaderId: "123",
+		Term:         0,
+		LeaderId:     "123",
 		PrevLogIndex: 0,
-		PrevLogTerm: 0,
+		PrevLogTerm:  0,
 		// Heartbeat request since entries is empty.
-		Entries: []*AppendEntriesRequest_Entry{},
+		Entries:      []*AppendEntriesRequest_Entry{},
 		LeaderCommit: 0,
 	}
 
-	response, err := SendAppendEntries("127.0.0.1:" + port, request)
+	response, err := SendAppendEntries("127.0.0.1:"+port, request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,20 +61,20 @@ func Test_AppendEntries_WhenTermIsOlderThanCurrentTerm_ReturnsSuccessFalse(t *te
 
 	request := &AppendEntriesRequest{
 		// Request should fail since CurrentTerm is 1, which is > 0.
-		Term: 0,
-		LeaderId: "123",
+		Term:         0,
+		LeaderId:     "123",
 		PrevLogIndex: 0,
-		PrevLogTerm: 0,
+		PrevLogTerm:  0,
 		Entries: []*AppendEntriesRequest_Entry{
 			&AppendEntriesRequest_Entry{
-				Key: "a",
+				Key:   "a",
 				Value: "A",
 			},
 		},
 		LeaderCommit: 0,
 	}
 
-	response, err := SendAppendEntries("127.0.0.1:" + port, request)
+	response, err := SendAppendEntries("127.0.0.1:"+port, request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,21 +97,21 @@ func Test_AppendEntries_WhenLogAtPrevLogIndexDoesNotMatch_ReturnsSuccessFalse(t 
 	state.Node.SetLogEntry(1, entry)
 
 	request := &AppendEntriesRequest{
-		Term: 1,
-		LeaderId: "123",
+		Term:         1,
+		LeaderId:     "123",
 		PrevLogIndex: 1,
 		// Request should fail since term for entry 1 is 1, not 0.
 		PrevLogTerm: 0,
 		Entries: []*AppendEntriesRequest_Entry{
 			&AppendEntriesRequest_Entry{
-				Key: "b",
+				Key:   "b",
 				Value: "B",
 			},
 		},
 		LeaderCommit: 0,
 	}
 
-	response, err := SendAppendEntries("127.0.0.1:" + port, request)
+	response, err := SendAppendEntries("127.0.0.1:"+port, request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,21 +134,21 @@ func Test_AppendEntries_WhenLeaderCommitIsGreaterThanCommitIndex_IncreasesCommit
 	state.Node.SetLogEntry(1, entry)
 
 	request := &AppendEntriesRequest{
-		Term: 1,
-		LeaderId: "123",
+		Term:         1,
+		LeaderId:     "123",
 		PrevLogIndex: 1,
 		// Request should fail since term for entry 1 is 1, not 0.
 		PrevLogTerm: 0,
 		Entries: []*AppendEntriesRequest_Entry{
 			&AppendEntriesRequest_Entry{
-				Key: "b",
+				Key:   "b",
 				Value: "B",
 			},
 		},
 		LeaderCommit: 2,
 	}
 
-	response, err := SendAppendEntries("127.0.0.1:" + port, request)
+	response, err := SendAppendEntries("127.0.0.1:"+port, request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -169,100 +169,100 @@ func Test_AppendEntries_WhenLeaderCommitIsGreaterThanCommitIndex_IncreasesCommit
 func Test_RequestVote(t *testing.T) {
 	resetTestEnvironment()
 
-	state.Node.SetVotedFor("1");
+	state.Node.SetVotedFor("1")
 
 	request := &AppendEntriesRequest{
-		Term: 1,
-		LeaderId: "123",
+		Term:         1,
+		LeaderId:     "123",
 		PrevLogIndex: 0,
-		PrevLogTerm: 0,
+		PrevLogTerm:  0,
 		Entries: []*AppendEntriesRequest_Entry{
 			&AppendEntriesRequest_Entry{
-				Key: "a",
+				Key:   "a",
 				Value: "A",
 			},
 		},
 		LeaderCommit: 0,
 	}
 
-	_, err := SendAppendEntries("127.0.0.1:" + port, request)
+	_, err := SendAppendEntries("127.0.0.1:"+port, request)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	var tests = []struct {
-		request RequestVoteRequest
+		request  RequestVoteRequest
 		response RequestVoteResponse
 	}{
 		{
 			// Term is too old.
-			RequestVoteRequest {
-				Term: 0,
-				CandidateId: "1",
+			RequestVoteRequest{
+				Term:         0,
+				CandidateId:  "1",
 				LastLogIndex: 1,
-				LastLogTerm: 0,
+				LastLogTerm:  0,
 			},
-			RequestVoteResponse {
-				Term: 1,
+			RequestVoteResponse{
+				Term:        1,
 				VoteGranted: false,
 			},
 		},
 		{
 			// Voted for a different candidate.
-			RequestVoteRequest {
-				Term: 1,
-				CandidateId: "2",
+			RequestVoteRequest{
+				Term:         1,
+				CandidateId:  "2",
 				LastLogIndex: 1,
-				LastLogTerm: 1,
+				LastLogTerm:  1,
 			},
-			RequestVoteResponse {
-				Term: 1,
+			RequestVoteResponse{
+				Term:        1,
 				VoteGranted: false,
 			},
 		},
 		{
 			// The log is out of date.
-			RequestVoteRequest {
-				Term: 1,
-				CandidateId: "1",
+			RequestVoteRequest{
+				Term:         1,
+				CandidateId:  "1",
 				LastLogIndex: 0,
-				LastLogTerm: 0,
+				LastLogTerm:  0,
 			},
-			RequestVoteResponse {
-				Term: 1,
+			RequestVoteResponse{
+				Term:        1,
 				VoteGranted: false,
 			},
 		},
 		{
 			// The log is in conflict with this node's log.
-			RequestVoteRequest {
-				Term: 1,
-				CandidateId: "1",
+			RequestVoteRequest{
+				Term:         1,
+				CandidateId:  "1",
 				LastLogIndex: 1,
-				LastLogTerm: 2,
+				LastLogTerm:  2,
 			},
-			RequestVoteResponse {
-				Term: 1,
+			RequestVoteResponse{
+				Term:        1,
 				VoteGranted: false,
 			},
 		},
 		{
 			// Everything is good!
-			RequestVoteRequest {
-				Term: 1,
-				CandidateId: "1",
+			RequestVoteRequest{
+				Term:         1,
+				CandidateId:  "1",
 				LastLogIndex: 1,
-				LastLogTerm: 1,
+				LastLogTerm:  1,
 			},
-			RequestVoteResponse {
-				Term: 1,
+			RequestVoteResponse{
+				Term:        1,
 				VoteGranted: true,
 			},
 		},
 	}
 
 	for _, test := range tests {
-		response, err := SendRequestVote("127.0.0.1:" + port, &test.request)
+		response, err := SendRequestVote("127.0.0.1:"+port, &test.request)
 		if err != nil {
 			t.Error(err)
 			continue
