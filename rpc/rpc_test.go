@@ -3,6 +3,7 @@ package rpc
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/thomasylee/GoRaft/global"
 	"github.com/thomasylee/GoRaft/state"
@@ -17,6 +18,8 @@ func TestMain(m *testing.M) {
 	global.TimeoutChannel = make(chan bool, 1)
 
 	go RunServer(port)
+	// Give the server a few seconds to start.
+	time.Sleep(3 * time.Second)
 	global.Log.Debug("gRPC server for tests has been started.")
 
 	os.Exit(m.Run())
