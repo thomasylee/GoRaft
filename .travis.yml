@@ -10,6 +10,6 @@ before_install:
   - go get golang.org/x/net/context
   - go get google.golang.org/grpc
 script:
-  - go test -coverprofile=coverage.out
+  - go test -coverprofile=coverage.out ./...
 after_success:
   - godacov -t $CODACY_TOKEN -r ./coverage.out -c $TRAVIS_COMMIT
